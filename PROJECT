@@ -1,0 +1,6 @@
+domain: kalypso.io
+layout:
+- go.kubebuilder.io/v3
+projectName: kalypso-observability-hub
+repo: github.com/microsoft/kalypso-observability-hub
+version: "3"
