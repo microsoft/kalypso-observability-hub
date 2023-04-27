@@ -20,7 +20,7 @@ Kalypso Observability Hub is a central storage that contains deployment data wit
 
 #### Example
 
-## Observability hub Open API
+## Observability hub API
 
 ## Deployment reports
 
