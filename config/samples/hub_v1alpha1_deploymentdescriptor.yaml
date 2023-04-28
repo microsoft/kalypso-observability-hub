@@ -1,0 +1,27 @@
+apiVersion: hub.kalypso.io/v1alpha1
+kind: DeploymentDescriptor
+metadata:
+  name: hello-world-functional-test-0-0-1
+spec:
+  workload:
+    name: hello-world
+    source:
+        repo: https://github.com/kaizentm/hello-world
+        branch: main
+        path: .
+    application:
+        name: greeting-service
+        workspace:
+            name: kaizentm
+  deploymentTarget:
+    name: functional-test
+    environment: dev
+    manifests:
+        repo: https://github.com/kaizentm/hello-world-gitops
+        branch: dev
+        path: functional-test
+  workloadVersion:
+    version: 0.0.1
+    build: build-1
+    commit: ca9ee9d0ff9ec52b998fdcf64e128c84ddd0e661
+    buildTime: "2023-04-27T23:25:05Z"
