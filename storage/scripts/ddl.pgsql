@@ -1,13 +1,13 @@
-drop table deployment;
-drop table reconciler;
-drop table host;
-drop table deployment_assignment;
-drop table workload_version;
-drop table deployment_target;
-drop table environment;
-drop table workload;
-drop table application;
-drop table workspace;
+-- drop table deployment;
+-- drop table reconciler;
+-- drop table host;
+-- drop table deployment_assignment;
+-- drop table workload_version;
+-- drop table deployment_target;
+-- drop table environment;
+-- drop table workload;
+-- drop table application;
+-- drop table workspace;
 
 create table if not exists workspace (
     id serial primary key,
