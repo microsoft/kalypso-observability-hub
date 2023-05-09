@@ -18,6 +18,16 @@ insert into environment
 values
 ('dev', 'dev environment');
 
+insert into environment
+(name , description)
+values
+('qa', 'qa environment');
+
+insert into environment
+(name , description)
+values
+('prod', 'prod environment');
+
 insert into deployment_target
 (name , description, workload_id, environment_id, manifests_storage_type, manifests_endpoint)
 values
@@ -49,9 +59,9 @@ values
 (1, 1, '5e8d9dd3514803b7bee6bd83eed4e2d18858e948');
 
 insert into deployment_assignment
-(deployment_target_id, workload_version_id, gitops_commit_id)
+(deployment_target_id, workload_version_id, gitops_commit_id, created_on)
 values
-(1, 2, '2e8d9dd3514803b7bee6bd83eed4e2d18858e944');
+(1, 2, '2e8d9dd3514803b7bee6bd83eed4e2d18858e944', (NOW() + interval '1 hour'));
 
 insert into host
 (name, description)
@@ -71,7 +81,17 @@ values
 insert into reconciler
 (name, host_id, description, reconciler_type, manifests_storage_type, manifests_endpoint)
 values
-('hello-world', 1, 'Reconciler for the Hello World fpplication', 'Flux', 'git', 'https://github.com/kaizentm/kalypso-app-gitops/dev/functional-test')
+('hello-world', 1, 'Reconciler for the Hello World application', 'Flux', 'git', 'https://github.com/kaizentm/kalypso-app-gitops/dev/functional-test');
+
+insert into reconciler
+(name, host_id, description, reconciler_type, manifests_storage_type, manifests_endpoint)
+values
+('argo', 2, 'Sample Reconciler', 'Argocd', 'git', 'https://github.com/kaizentm/kalypso-app-gitops/dev/performance-test');
+
+insert into reconciler
+(name, host_id, description, reconciler_type, manifests_storage_type, manifests_endpoint)
+values
+('ansible', 3, 'Sample Reconciler', 'Ansible', 'git', 'https://github.com/kaizentm/kalypso-app-gitops/dev/int-test');
 
 insert into deployment
 (gitops_commit_id, reconciler_id, status, status_message)
@@ -79,6 +99,7 @@ values
 ('5e8d9dd3514803b7bee6bd83eed4e2d18858e948',1, 'success', 'Successfully deployed');
 
 insert into deployment
-(gitops_commit_id, reconciler_id, status, status_message)
+(gitops_commit_id, reconciler_id, status, status_message, created_on)
 values
-('2e8d9dd3514803b7bee6bd83eed4e2d18858e944',1, 'failure', 'Failed to deploy');
+('2e8d9dd3514803b7bee6bd83eed4e2d18858e944',1, 'failure', 'Failed to deploy', (NOW() + interval '1 hour'));
+

@@ -1,3 +1,14 @@
+drop table deployment;
+drop table reconciler;
+drop table host;
+drop table deployment_assignment;
+drop table workload_version;
+drop table deployment_target;
+drop table environment;
+drop table workload;
+drop table application;
+drop table workspace;
+
 create table if not exists workspace (
     id serial primary key,
     name varchar(30) not null unique,
@@ -61,7 +72,7 @@ create table if not exists deployment_target(
     created_by varchar(30) default current_user,
     updated_on timestamp default current_timestamp,
     updated_by varchar(30) default current_user,
-    unique(workload_id, name),
+    unique(workload_id, name)
 );
 
 
