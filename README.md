@@ -11,6 +11,13 @@ Platform and Application Dev teams need a deployment observability solution to p
 - track deployment history per environment, per application/service, per microservice 
 - compare desired deployment state to the reality and see deployment drift
 
+## Deployment reports
+
+See examples of some [deployment reports](./docs/images/DeploymentObservabilityReports.png) that could be built on top of Observability Hub data.
+
+## Storage data model
+
+See [logical data model](./docs/images/DeploymentObservabilityLogicalModel.drawio) of the Observability Hub storage.
 
 ## Data flow
 
@@ -61,14 +68,6 @@ spec:
 #### Example
 
 ## Observability hub API
-
-## Deployment reports
-
-See examples of some [deployment reports](./docs/images/DeploymentObservabilityReports.png) that could be built on top of Observability Hub data.
-
-## Storage data model
-
-See [logical data model](./docs/images/DeploymentObservabilityLogicalModel.drawio) of the Observability Hub storage.
 
 ## Installation
 
