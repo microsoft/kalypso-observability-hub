@@ -1,6 +1,6 @@
-<mxfile host="app.diagrams.net" modified="2023-05-02T00:24:14.602Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.4 Safari/605.1.15" etag="RlHY9DzH2a07FDYBzc0k" version="21.2.3" type="device">
+<mxfile host="app.diagrams.net" modified="2023-07-11T22:51:52.449Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36" etag="P-BOgWM3Bu0UwhAHSrpT" version="21.5.2" type="device">
   <diagram name="Page-1" id="GvU2MzniRtgzS9_KcY5u">
-    <mxGraphModel dx="2254" dy="1374" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="2042" dy="1145" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -257,8 +257,8 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="EL073KuHTjqjMubjQDX9-55" value="Alternative (requires access from a host to the Observability Hub)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;" parent="1" vertex="1">
-          <mxGeometry x="860" y="610" width="170" height="30" as="geometry" />
+        <mxCell id="EL073KuHTjqjMubjQDX9-55" value="Alternative. If ARG is not used (e.g. non azure-arc cluster, argocd, not a cluster at all (VM))&lt;br&gt;OpenTelemetry (OTLP) can be used as a transport for this channel, perhaps via a pair of Otel Collectors&amp;nbsp;&amp;nbsp;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;" parent="1" vertex="1">
+          <mxGeometry x="1200" y="490" width="411" height="30" as="geometry" />
         </mxCell>
         <mxCell id="EL073KuHTjqjMubjQDX9-56" value="" style="shape=image;verticalLabelPosition=bottom;labelBackgroundColor=default;verticalAlign=top;aspect=fixed;imageAspect=0;image=https://blog.sldk.de/img/posts/fluxcd/flux-horizontal-color.png;fontSize=14;" parent="1" vertex="1">
           <mxGeometry x="-65" y="847.5699999999999" width="87.02" height="44.85" as="geometry" />
@@ -331,6 +331,27 @@
         </mxCell>
         <mxCell id="EL073KuHTjqjMubjQDX9-76" value="Kalypso Observability Hub" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;" parent="1" vertex="1">
           <mxGeometry x="-65" y="50" width="271.49" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="fA9ZJskCVQBjUn5lBOAB-1" value="" style="endArrow=none;html=1;rounded=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="1062" y="653" as="sourcePoint" />
+            <mxPoint x="1385" y="549" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fA9ZJskCVQBjUn5lBOAB-4" value="" style="endArrow=none;html=1;rounded=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="1350" y="855" as="sourcePoint" />
+            <mxPoint x="1383" y="551" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fA9ZJskCVQBjUn5lBOAB-5" value="Using Kalypso here is totally optional.&lt;br&gt;The observability hub is decoupled from any Kalypso abstractions." style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="-737" y="1232" width="370" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="fA9ZJskCVQBjUn5lBOAB-6" value="" style="endArrow=none;html=1;rounded=0;exitX=0.489;exitY=-0.085;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="fA9ZJskCVQBjUn5lBOAB-5">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="-229" y="963" as="sourcePoint" />
+            <mxPoint x="-556" y="1175" as="targetPoint" />
+          </mxGeometry>
         </mxCell>
       </root>
     </mxGraphModel>
