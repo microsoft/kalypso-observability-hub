@@ -2,6 +2,16 @@
 
 Kalypso Observability Hub is a central storage that contains deployment data with historical information on workload versions and their deployment state across clusters. This data is used by dashboards and alerts for the deployment monitoring purposes, by the CD pipelines, implementing progressive rollout across environments and by various external systems that make decisions basing on the deployment data. 
 
+## Motivation
+
+Platform and Application Dev teams need a deployment observability solution to perform the following activities:
+
+- monitor what application/service versions are deployed to clusters in the environments
+- compare environments and see deployment discrepancy (e.g. how my "stage" environment is different from "prod")
+- track deployment history per environment, per application/service, per microservice 
+- compare desired deployment state to the reality and see deployment drift
+
+
 ## Data flow
 
 ![deployment-observability-hub](./docs/images/deployment-observability-hub.png)
