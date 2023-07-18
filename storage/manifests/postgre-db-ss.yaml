@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgre-db
+  labels:
+    run: postgre-db
+spec:
+  selector:
+      matchLabels:
+        run: postgre-db
+  serviceName: "postgre-db-svc"
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: postgre-db
+    spec:
+      containers:
+      - image: postgres:15.2
+        volumeMounts:
+           - mountPath: /var/lib/postgresql/data
+             name: db      
+        env:
+          - name: POSTGRES_DB
+            valueFrom:
+              configMapKeyRef:
+                   name: postgre-db-config
+                   key: db-name                   
+          - name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                   name: postgre-db-secret
+                   key: username                   
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                   name: postgre-db-secret
+                   key: password                   
+          - name: PGDATA
+            value: /var/lib/postgresql/data/pgdata            
+        imagePullPolicy: Always
+        name: postgre-db
+        ports:
+        - containerPort: 5432
+          protocol: TCP
+  volumeClaimTemplates:
+   - metadata:
+       name: db
+     spec:
+       accessModes: [ "ReadWriteOnce" ]
+       resources:
+         requests:
+           storage: 200Mi
