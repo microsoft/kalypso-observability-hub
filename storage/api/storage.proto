@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+option go_package = "github.com/microsoft/kalypso-observability-hub/storage/api";
+
+package api;
+
+message Workspace {
+    int32 id = 1;
+    string name = 2;
+    string description = 3;
+}
+
+service StorageApi {
+    rpc UpdateWorkspace(Workspace) returns (Workspace) {}
+}
