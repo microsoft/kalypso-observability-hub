@@ -7,17 +7,14 @@ import (
 	"log"
 
 	_ "github.com/lib/pq"
-	pb "github.com/microsoft/kalypso-observability-hub/storage/api"
 )
 
-type Workspace struct {
-	Id          int
-	Name        string
-	Description string
+type Entity interface {
+	update(conn *sql.DB) (Entity, error)
 }
 
 type DBClient interface {
-	UpdateWorkspace(ctx context.Context, ws *Workspace) (*pb.Workspace, error)
+	Update(ctx context.Context, enity Entity) (Entity, error)
 }
 
 type postgresClient struct {
@@ -41,17 +38,15 @@ func (c *postgresClient) getConnection() (*sql.DB, error) {
 	return conn, nil
 }
 
-func (c *postgresClient) UpdateWorkspace(ctx context.Context, ws *Workspace) (*pb.Workspace, error) {
+func (c *postgresClient) Update(ctx context.Context, entity Entity) (Entity, error) {
 	conn, err := c.getConnection()
 	if err != nil {
 		return nil, err
 	}
 	defer conn.Close()
-	var id int32
-	err = conn.QueryRow("INSERT INTO workspace (name, description) VALUES ($1, $2) RETURNING id", ws.Name, ws.Description).Scan(&id)
+	entity, err = entity.update(conn)
 	if err != nil {
 		return nil, err
 	}
-
-	return &pb.Workspace{Id: id, Name: ws.Name, Description: ws.Description}, nil
+	return entity, nil
 }
