@@ -45,8 +45,59 @@ func (s *storageApiServer) UpdateWorkspace(ctx context.Context, workspace *pb.Wo
 	log.Printf("Updated: %v", workspace_entity)
 	//return the workspace
 	return &pb.Workspace{
+		Id:          int32(workspace_entity.Id),
 		Name:        workspace_entity.Name,
 		Description: workspace_entity.Description,
+	}, nil
+}
+
+func (s *storageApiServer) UpdateApplication(ctx context.Context, application *pb.Application) (*pb.Application, error) {
+	log.Printf("Received: %v", application)
+
+	app, err := s.dbClient.Update(ctx, &db.Application{
+		Name:        application.Name,
+		Description: application.Description,
+		WorkspaceId: int(application.WorkspaceId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	application_entity := app.(*db.Application)
+
+	log.Printf("Updated: %v", application_entity)
+	//return the application
+	return &pb.Application{
+		Id:          int32(application_entity.Id),
+		Name:        application_entity.Name,
+		Description: application_entity.Description,
+		WorkspaceId: int32(application_entity.WorkspaceId),
+	}, nil
+}
+
+func (s *storageApiServer) UpdateWorkload(ctx context.Context, workload *pb.Workload) (*pb.Workload, error) {
+	log.Printf("Received: %v", workload)
+
+	wl, err := s.dbClient.Update(ctx, &db.Workload{
+		Name:              workload.Name,
+		Description:       workload.Description,
+		SourceStorageType: workload.SourceStorageType,
+		SourceEndpoint:    workload.SourceEndpoint,
+		ApplicationId:     int(workload.ApplicationId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	workload_entity := wl.(*db.Workload)
+
+	log.Printf("Updated: %v", workload_entity)
+	//return the workload
+	return &pb.Workload{
+		Id:                int32(workload_entity.Id),
+		Name:              workload_entity.Name,
+		Description:       workload_entity.Description,
+		SourceStorageType: workload_entity.SourceStorageType,
+		SourceEndpoint:    workload_entity.SourceEndpoint,
+		ApplicationId:     int32(workload_entity.ApplicationId),
 	}, nil
 }
 

@@ -24,3 +24,33 @@ func TestUpdateWorkspace(t *testing.T) {
 		return
 	}
 }
+
+// Test UpdateApplication
+func TestUpdateApplication(t *testing.T) {
+	client := NewObservabilityStorageGrpcClient(*serverAddr)
+	_, err := client.UpdateApplication(context.Background(), &pb.Application{
+		Name:        "Name",
+		Description: "Description",
+		WorkspaceId: 1,
+	})
+	if err != nil {
+		t.Errorf("UpdateApplication() error = %v", err)
+		return
+	}
+}
+
+// Test UpdateWorkload
+func TestUpdateWorkload(t *testing.T) {
+	client := NewObservabilityStorageGrpcClient(*serverAddr)
+	_, err := client.UpdateWorkload(context.Background(), &pb.Workload{
+		Name:              "Name",
+		Description:       "Description",
+		SourceStorageType: "git",
+		SourceEndpoint:    "http://github.com",
+		ApplicationId:     1,
+	})
+	if err != nil {
+		t.Errorf("UpdateWorkload() error = %v", err)
+		return
+	}
+}

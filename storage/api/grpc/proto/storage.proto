@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "github.com/microsoft/kalypso-observability-hub/storage/proto";
+option go_package = "github.com/microsoft/kalypso-observability-hub/storage/api/grpc/proto";
 
 package proto;
 
@@ -10,6 +10,27 @@ message Workspace {
     string description = 3;
 }
 
+message Application {
+    int32 id = 1;
+    string name = 2;
+    string description = 3;
+    int32 workspace_id = 4;
+}
+
+message Workload {
+    int32 id = 1;
+    string name = 2;
+    string description = 3;
+    string source_storage_type = 4;
+    string source_endpoint = 5;
+    int32 application_id = 6;
+
+}
+
+
+
 service StorageApi {
     rpc UpdateWorkspace(Workspace) returns (Workspace) {}
+    rpc UpdateApplication(Application) returns (Application) {}
+    rpc UpdateWorkload(Workload) returns (Workload) {}
 }

@@ -23,6 +23,8 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type StorageApiClient interface {
 	UpdateWorkspace(ctx context.Context, in *Workspace, opts ...grpc.CallOption) (*Workspace, error)
+	UpdateApplication(ctx context.Context, in *Application, opts ...grpc.CallOption) (*Application, error)
+	UpdateWorkload(ctx context.Context, in *Workload, opts ...grpc.CallOption) (*Workload, error)
 }
 
 type storageApiClient struct {
@@ -35,7 +37,25 @@ func NewStorageApiClient(cc grpc.ClientConnInterface) StorageApiClient {
 
 func (c *storageApiClient) UpdateWorkspace(ctx context.Context, in *Workspace, opts ...grpc.CallOption) (*Workspace, error) {
 	out := new(Workspace)
-	err := c.cc.Invoke(ctx, "/api.StorageApi/UpdateWorkspace", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/proto.StorageApi/UpdateWorkspace", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storageApiClient) UpdateApplication(ctx context.Context, in *Application, opts ...grpc.CallOption) (*Application, error) {
+	out := new(Application)
+	err := c.cc.Invoke(ctx, "/proto.StorageApi/UpdateApplication", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storageApiClient) UpdateWorkload(ctx context.Context, in *Workload, opts ...grpc.CallOption) (*Workload, error) {
+	out := new(Workload)
+	err := c.cc.Invoke(ctx, "/proto.StorageApi/UpdateWorkload", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -47,6 +67,8 @@ func (c *storageApiClient) UpdateWorkspace(ctx context.Context, in *Workspace, o
 // for forward compatibility
 type StorageApiServer interface {
 	UpdateWorkspace(context.Context, *Workspace) (*Workspace, error)
+	UpdateApplication(context.Context, *Application) (*Application, error)
+	UpdateWorkload(context.Context, *Workload) (*Workload, error)
 	mustEmbedUnimplementedStorageApiServer()
 }
 
@@ -56,6 +78,12 @@ type UnimplementedStorageApiServer struct {
 
 func (UnimplementedStorageApiServer) UpdateWorkspace(context.Context, *Workspace) (*Workspace, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateWorkspace not implemented")
+}
+func (UnimplementedStorageApiServer) UpdateApplication(context.Context, *Application) (*Application, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateApplication not implemented")
+}
+func (UnimplementedStorageApiServer) UpdateWorkload(context.Context, *Workload) (*Workload, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateWorkload not implemented")
 }
 func (UnimplementedStorageApiServer) mustEmbedUnimplementedStorageApiServer() {}
 
@@ -80,10 +108,46 @@ func _StorageApi_UpdateWorkspace_Handler(srv interface{}, ctx context.Context, d
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/api.StorageApi/UpdateWorkspace",
+		FullMethod: "/proto.StorageApi/UpdateWorkspace",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(StorageApiServer).UpdateWorkspace(ctx, req.(*Workspace))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _StorageApi_UpdateApplication_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Application)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StorageApiServer).UpdateApplication(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.StorageApi/UpdateApplication",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StorageApiServer).UpdateApplication(ctx, req.(*Application))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _StorageApi_UpdateWorkload_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Workload)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StorageApiServer).UpdateWorkload(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.StorageApi/UpdateWorkload",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StorageApiServer).UpdateWorkload(ctx, req.(*Workload))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -92,12 +156,20 @@ func _StorageApi_UpdateWorkspace_Handler(srv interface{}, ctx context.Context, d
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var StorageApi_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "api.StorageApi",
+	ServiceName: "proto.StorageApi",
 	HandlerType: (*StorageApiServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "UpdateWorkspace",
 			Handler:    _StorageApi_UpdateWorkspace_Handler,
+		},
+		{
+			MethodName: "UpdateApplication",
+			Handler:    _StorageApi_UpdateApplication_Handler,
+		},
+		{
+			MethodName: "UpdateWorkload",
+			Handler:    _StorageApi_UpdateWorkload_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
