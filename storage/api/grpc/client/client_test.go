@@ -54,3 +54,16 @@ func TestUpdateWorkload(t *testing.T) {
 		return
 	}
 }
+
+// Test UpdateEnvironment
+func TestUpdateEnvironment(t *testing.T) {
+	client := NewObservabilityStorageGrpcClient(*serverAddr)
+	_, err := client.UpdateEnvironment(context.Background(), &pb.Environment{
+		Name:        "Name",
+		Description: "Description",
+	})
+	if err != nil {
+		t.Errorf("UpdateEnvironment() error = %v", err)
+		return
+	}
+}

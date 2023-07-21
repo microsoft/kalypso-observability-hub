@@ -13,6 +13,7 @@ type ObservabilityStorageGrpcClient interface {
 	UpdateWorkspace(ctx context.Context, in *pb.Workspace) (*pb.Workspace, error)
 	UpdateApplication(ctx context.Context, in *pb.Application) (*pb.Application, error)
 	UpdateWorkload(ctx context.Context, in *pb.Workload) (*pb.Workload, error)
+	UpdateEnvironment(ctx context.Context, in *pb.Environment) (*pb.Environment, error)
 }
 
 type observabilityStorageGrpcClient struct {
@@ -75,4 +76,18 @@ func (c *observabilityStorageGrpcClient) UpdateWorkload(ctx context.Context, in 
 		return nil, err
 	}
 	return wl, nil
+}
+
+func (c *observabilityStorageGrpcClient) UpdateEnvironment(ctx context.Context, in *pb.Environment) (*pb.Environment, error) {
+	conn, err := c.getConnection()
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+	client := pb.NewStorageApiClient(conn)
+	env, err := client.UpdateEnvironment(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return env, nil
 }

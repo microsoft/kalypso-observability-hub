@@ -9,7 +9,7 @@ type Application struct {
 	WorkspaceId int
 }
 
-// make sure that the Workspace implements the Entity interface
+// make sure that the Application implements the Entity interface
 var _ Entity = (*Application)(nil)
 
 func (app *Application) update(conn *sql.DB) (Entity, error) {

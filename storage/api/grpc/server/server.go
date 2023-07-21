@@ -31,7 +31,7 @@ type storageApiServer struct {
 var _ pb.StorageApiServer = (*storageApiServer)(nil)
 
 func (s *storageApiServer) UpdateWorkspace(ctx context.Context, workspace *pb.Workspace) (*pb.Workspace, error) {
-	log.Printf("Received: %v", workspace)
+	log.Printf("Received Workspace: %v", workspace)
 
 	ws, err := s.dbClient.Update(ctx, &db.Workspace{
 		Name:        workspace.Name,
@@ -42,7 +42,7 @@ func (s *storageApiServer) UpdateWorkspace(ctx context.Context, workspace *pb.Wo
 	}
 	workspace_entity := ws.(*db.Workspace)
 
-	log.Printf("Updated: %v", workspace_entity)
+	log.Printf("Updated Workspace: %v", workspace_entity)
 	//return the workspace
 	return &pb.Workspace{
 		Id:          int32(workspace_entity.Id),
@@ -52,7 +52,7 @@ func (s *storageApiServer) UpdateWorkspace(ctx context.Context, workspace *pb.Wo
 }
 
 func (s *storageApiServer) UpdateApplication(ctx context.Context, application *pb.Application) (*pb.Application, error) {
-	log.Printf("Received: %v", application)
+	log.Printf("Received Application: %v", application)
 
 	app, err := s.dbClient.Update(ctx, &db.Application{
 		Name:        application.Name,
@@ -64,7 +64,7 @@ func (s *storageApiServer) UpdateApplication(ctx context.Context, application *p
 	}
 	application_entity := app.(*db.Application)
 
-	log.Printf("Updated: %v", application_entity)
+	log.Printf("Updated Application: %v", application_entity)
 	//return the application
 	return &pb.Application{
 		Id:          int32(application_entity.Id),
@@ -75,7 +75,7 @@ func (s *storageApiServer) UpdateApplication(ctx context.Context, application *p
 }
 
 func (s *storageApiServer) UpdateWorkload(ctx context.Context, workload *pb.Workload) (*pb.Workload, error) {
-	log.Printf("Received: %v", workload)
+	log.Printf("Received Workload: %v", workload)
 
 	wl, err := s.dbClient.Update(ctx, &db.Workload{
 		Name:              workload.Name,
@@ -89,7 +89,7 @@ func (s *storageApiServer) UpdateWorkload(ctx context.Context, workload *pb.Work
 	}
 	workload_entity := wl.(*db.Workload)
 
-	log.Printf("Updated: %v", workload_entity)
+	log.Printf("Updated Workload: %v", workload_entity)
 	//return the workload
 	return &pb.Workload{
 		Id:                int32(workload_entity.Id),
@@ -98,6 +98,27 @@ func (s *storageApiServer) UpdateWorkload(ctx context.Context, workload *pb.Work
 		SourceStorageType: workload_entity.SourceStorageType,
 		SourceEndpoint:    workload_entity.SourceEndpoint,
 		ApplicationId:     int32(workload_entity.ApplicationId),
+	}, nil
+}
+
+func (s *storageApiServer) UpdateEnvironment(ctx context.Context, environment *pb.Environment) (*pb.Environment, error) {
+	log.Printf("Received Environment: %v", environment)
+
+	env, err := s.dbClient.Update(ctx, &db.Environment{
+		Name:        environment.Name,
+		Description: environment.Description,
+	})
+	if err != nil {
+		return nil, err
+	}
+	environment_entity := env.(*db.Environment)
+
+	log.Printf("Updated Environment: %v", environment_entity)
+	//return the environment
+	return &pb.Environment{
+		Id:          int32(environment_entity.Id),
+		Name:        environment_entity.Name,
+		Description: environment_entity.Description,
 	}, nil
 }
 

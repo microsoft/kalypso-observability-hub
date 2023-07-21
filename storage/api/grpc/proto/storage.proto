@@ -24,13 +24,18 @@ message Workload {
     string source_storage_type = 4;
     string source_endpoint = 5;
     int32 application_id = 6;
-
 }
 
+message Environment {
+    int32 id = 1;
+    string name = 2;
+    string description = 3;
+}
 
 
 service StorageApi {
     rpc UpdateWorkspace(Workspace) returns (Workspace) {}
     rpc UpdateApplication(Application) returns (Application) {}
     rpc UpdateWorkload(Workload) returns (Workload) {}
+    rpc UpdateEnvironment(Environment) returns (Environment) {}
 }

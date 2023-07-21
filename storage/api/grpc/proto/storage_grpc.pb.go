@@ -25,6 +25,7 @@ type StorageApiClient interface {
 	UpdateWorkspace(ctx context.Context, in *Workspace, opts ...grpc.CallOption) (*Workspace, error)
 	UpdateApplication(ctx context.Context, in *Application, opts ...grpc.CallOption) (*Application, error)
 	UpdateWorkload(ctx context.Context, in *Workload, opts ...grpc.CallOption) (*Workload, error)
+	UpdateEnvironment(ctx context.Context, in *Environment, opts ...grpc.CallOption) (*Environment, error)
 }
 
 type storageApiClient struct {
@@ -62,6 +63,15 @@ func (c *storageApiClient) UpdateWorkload(ctx context.Context, in *Workload, opt
 	return out, nil
 }
 
+func (c *storageApiClient) UpdateEnvironment(ctx context.Context, in *Environment, opts ...grpc.CallOption) (*Environment, error) {
+	out := new(Environment)
+	err := c.cc.Invoke(ctx, "/proto.StorageApi/UpdateEnvironment", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // StorageApiServer is the server API for StorageApi service.
 // All implementations must embed UnimplementedStorageApiServer
 // for forward compatibility
@@ -69,6 +79,7 @@ type StorageApiServer interface {
 	UpdateWorkspace(context.Context, *Workspace) (*Workspace, error)
 	UpdateApplication(context.Context, *Application) (*Application, error)
 	UpdateWorkload(context.Context, *Workload) (*Workload, error)
+	UpdateEnvironment(context.Context, *Environment) (*Environment, error)
 	mustEmbedUnimplementedStorageApiServer()
 }
 
@@ -84,6 +95,9 @@ func (UnimplementedStorageApiServer) UpdateApplication(context.Context, *Applica
 }
 func (UnimplementedStorageApiServer) UpdateWorkload(context.Context, *Workload) (*Workload, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateWorkload not implemented")
+}
+func (UnimplementedStorageApiServer) UpdateEnvironment(context.Context, *Environment) (*Environment, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateEnvironment not implemented")
 }
 func (UnimplementedStorageApiServer) mustEmbedUnimplementedStorageApiServer() {}
 
@@ -152,6 +166,24 @@ func _StorageApi_UpdateWorkload_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _StorageApi_UpdateEnvironment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Environment)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StorageApiServer).UpdateEnvironment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.StorageApi/UpdateEnvironment",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StorageApiServer).UpdateEnvironment(ctx, req.(*Environment))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // StorageApi_ServiceDesc is the grpc.ServiceDesc for StorageApi service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -170,6 +202,10 @@ var StorageApi_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateWorkload",
 			Handler:    _StorageApi_UpdateWorkload_Handler,
+		},
+		{
+			MethodName: "UpdateEnvironment",
+			Handler:    _StorageApi_UpdateEnvironment_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
