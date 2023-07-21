@@ -32,10 +32,70 @@ message Environment {
     string description = 3;
 }
 
+message DeploymentTarget  {
+	int32 id = 1;
+	string name = 2;                
+	string description = 3;         
+	int32 workload_id = 4;
+	int32 environment_id = 5;
+	string labels = 6;              
+	string manifests_storage_type = 7;
+	string manifests_endpoint = 8;   
+}
+
+message WorkloadVersion {
+	int32 id = 1;           
+	string version = 2;      
+	string build_id = 3;      
+	string build_commit_id = 4; 
+	int32 workload_id = 5;
+}
+
+message DeploymentAssignment {
+	int32 id = 1;
+	int32 deployment_target_id = 2; 
+	int32 workload_version_id  = 3;
+	string gitops_commit_id = 4;
+}
+
+message Host {
+    int32 id = 1;
+    string name = 2;
+    string description = 3;
+	string host_type = 4;   
+	string labels = 5;      
+}
+
+message Reconciler {
+	int32 id = 1;                  
+	string name = 2;                 
+	int32 host_id = 3;              
+	string description = 4;         
+	string reconciler_type = 5;      
+	string labels = 6;              
+	string manifests_storage_type = 7;
+	string manifests_endpoint = 8;   
+}
+
+message Deployment {
+	int32 id = 1;
+	string gitops_commit_id = 2;
+	int32 reconciler_id = 3;
+	string status = 4;        
+	string status_message = 5; 
+}
+
+
 
 service StorageApi {
     rpc UpdateWorkspace(Workspace) returns (Workspace) {}
     rpc UpdateApplication(Application) returns (Application) {}
     rpc UpdateWorkload(Workload) returns (Workload) {}
     rpc UpdateEnvironment(Environment) returns (Environment) {}
+    rpc UpdateDeploymentTarget(DeploymentTarget) returns (DeploymentTarget) {}
+    rpc UpdateWorkloadVersion(WorkloadVersion) returns (WorkloadVersion) {}
+    rpc UpdateDeploymentAssignment(DeploymentAssignment) returns (DeploymentAssignment) {}
+    rpc UpdateHost(Host) returns (Host) {}
+    rpc UpdateReconciler(Reconciler) returns (Reconciler) {}
+    rpc UpdateDeployment(Deployment) returns (Deployment) {}
 }

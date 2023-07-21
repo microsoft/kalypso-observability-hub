@@ -67,3 +67,98 @@ func TestUpdateEnvironment(t *testing.T) {
 		return
 	}
 }
+
+// Test UpdateDeploymentTarget
+func TestUpdateDeploymentTarget(t *testing.T) {
+	client := NewObservabilityStorageGrpcClient(*serverAddr)
+	_, err := client.UpdateDeploymentTarget(context.Background(), &pb.DeploymentTarget{
+		Name:                 "Name",
+		Description:          "Description",
+		WorkloadId:           1,
+		EnvironmentId:        1,
+		Labels:               "good",
+		ManifestsStorageType: "git",
+		ManifestsEndpoint:    "http://github.com",
+	})
+	if err != nil {
+		t.Errorf("UpdateDeploymentTarget() error = %v", err)
+		return
+	}
+}
+
+// Test UpdateWorkloadVersion
+func TestUpdateWorkloadVersion(t *testing.T) {
+	client := NewObservabilityStorageGrpcClient(*serverAddr)
+	_, err := client.UpdateWorkloadVersion(context.Background(), &pb.WorkloadVersion{
+		Version:       "1.0.0",
+		WorkloadId:    1,
+		BuildCommitId: "1234567890",
+		BuildId:       "123",
+	})
+	if err != nil {
+		t.Errorf("UpdateWorkloadVersion() error = %v", err)
+		return
+	}
+}
+
+// Test UpdateDeploymentAssignment
+func TestUpdateDeploymentAssignment(t *testing.T) {
+	client := NewObservabilityStorageGrpcClient(*serverAddr)
+	_, err := client.UpdateDeploymentAssignment(context.Background(), &pb.DeploymentAssignment{
+		DeploymentTargetId: 1,
+		WorkloadVersionId:  1,
+		GitopsCommitId:     "1234567890",
+	})
+	if err != nil {
+		t.Errorf("UpdateDeploymentAssignment() error = %v", err)
+		return
+	}
+}
+
+// Test UpdateHost
+func TestUpdateHost(t *testing.T) {
+	client := NewObservabilityStorageGrpcClient(*serverAddr)
+	_, err := client.UpdateHost(context.Background(), &pb.Host{
+		Name:        "Name",
+		Description: "Description",
+		HostType:    "HostType",
+		Labels:      "Labels",
+	})
+	if err != nil {
+		t.Errorf("UpdateHost() error = %v", err)
+		return
+	}
+}
+
+// Test UpdateReconciler
+func TestUpdateReconciler(t *testing.T) {
+	client := NewObservabilityStorageGrpcClient(*serverAddr)
+	_, err := client.UpdateReconciler(context.Background(), &pb.Reconciler{
+		Name:                 "Name",
+		Description:          "Description",
+		HostId:               1,
+		ReconcilerType:       "Flux",
+		Labels:               "Labels",
+		ManifestsStorageType: "git",
+		ManifestsEndpoint:    "http://github.com",
+	})
+	if err != nil {
+		t.Errorf("UpdateReconciler() error = %v", err)
+		return
+	}
+}
+
+// Test UpdateDeployment
+func TestUpdateDeployment(t *testing.T) {
+	client := NewObservabilityStorageGrpcClient(*serverAddr)
+	_, err := client.UpdateDeployment(context.Background(), &pb.Deployment{
+		GitopsCommitId: "1234567890",
+		ReconcilerId:   1,
+		Status:         "success",
+		StatusMessage:  "Successfully deployed",
+	})
+	if err != nil {
+		t.Errorf("UpdateDeployment() error = %v", err)
+		return
+	}
+}

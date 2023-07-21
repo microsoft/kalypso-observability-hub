@@ -26,6 +26,12 @@ type StorageApiClient interface {
 	UpdateApplication(ctx context.Context, in *Application, opts ...grpc.CallOption) (*Application, error)
 	UpdateWorkload(ctx context.Context, in *Workload, opts ...grpc.CallOption) (*Workload, error)
 	UpdateEnvironment(ctx context.Context, in *Environment, opts ...grpc.CallOption) (*Environment, error)
+	UpdateDeploymentTarget(ctx context.Context, in *DeploymentTarget, opts ...grpc.CallOption) (*DeploymentTarget, error)
+	UpdateWorkloadVersion(ctx context.Context, in *WorkloadVersion, opts ...grpc.CallOption) (*WorkloadVersion, error)
+	UpdateDeploymentAssignment(ctx context.Context, in *DeploymentAssignment, opts ...grpc.CallOption) (*DeploymentAssignment, error)
+	UpdateHost(ctx context.Context, in *Host, opts ...grpc.CallOption) (*Host, error)
+	UpdateReconciler(ctx context.Context, in *Reconciler, opts ...grpc.CallOption) (*Reconciler, error)
+	UpdateDeployment(ctx context.Context, in *Deployment, opts ...grpc.CallOption) (*Deployment, error)
 }
 
 type storageApiClient struct {
@@ -72,6 +78,60 @@ func (c *storageApiClient) UpdateEnvironment(ctx context.Context, in *Environmen
 	return out, nil
 }
 
+func (c *storageApiClient) UpdateDeploymentTarget(ctx context.Context, in *DeploymentTarget, opts ...grpc.CallOption) (*DeploymentTarget, error) {
+	out := new(DeploymentTarget)
+	err := c.cc.Invoke(ctx, "/proto.StorageApi/UpdateDeploymentTarget", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storageApiClient) UpdateWorkloadVersion(ctx context.Context, in *WorkloadVersion, opts ...grpc.CallOption) (*WorkloadVersion, error) {
+	out := new(WorkloadVersion)
+	err := c.cc.Invoke(ctx, "/proto.StorageApi/UpdateWorkloadVersion", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storageApiClient) UpdateDeploymentAssignment(ctx context.Context, in *DeploymentAssignment, opts ...grpc.CallOption) (*DeploymentAssignment, error) {
+	out := new(DeploymentAssignment)
+	err := c.cc.Invoke(ctx, "/proto.StorageApi/UpdateDeploymentAssignment", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storageApiClient) UpdateHost(ctx context.Context, in *Host, opts ...grpc.CallOption) (*Host, error) {
+	out := new(Host)
+	err := c.cc.Invoke(ctx, "/proto.StorageApi/UpdateHost", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storageApiClient) UpdateReconciler(ctx context.Context, in *Reconciler, opts ...grpc.CallOption) (*Reconciler, error) {
+	out := new(Reconciler)
+	err := c.cc.Invoke(ctx, "/proto.StorageApi/UpdateReconciler", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storageApiClient) UpdateDeployment(ctx context.Context, in *Deployment, opts ...grpc.CallOption) (*Deployment, error) {
+	out := new(Deployment)
+	err := c.cc.Invoke(ctx, "/proto.StorageApi/UpdateDeployment", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // StorageApiServer is the server API for StorageApi service.
 // All implementations must embed UnimplementedStorageApiServer
 // for forward compatibility
@@ -80,6 +140,12 @@ type StorageApiServer interface {
 	UpdateApplication(context.Context, *Application) (*Application, error)
 	UpdateWorkload(context.Context, *Workload) (*Workload, error)
 	UpdateEnvironment(context.Context, *Environment) (*Environment, error)
+	UpdateDeploymentTarget(context.Context, *DeploymentTarget) (*DeploymentTarget, error)
+	UpdateWorkloadVersion(context.Context, *WorkloadVersion) (*WorkloadVersion, error)
+	UpdateDeploymentAssignment(context.Context, *DeploymentAssignment) (*DeploymentAssignment, error)
+	UpdateHost(context.Context, *Host) (*Host, error)
+	UpdateReconciler(context.Context, *Reconciler) (*Reconciler, error)
+	UpdateDeployment(context.Context, *Deployment) (*Deployment, error)
 	mustEmbedUnimplementedStorageApiServer()
 }
 
@@ -98,6 +164,24 @@ func (UnimplementedStorageApiServer) UpdateWorkload(context.Context, *Workload) 
 }
 func (UnimplementedStorageApiServer) UpdateEnvironment(context.Context, *Environment) (*Environment, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateEnvironment not implemented")
+}
+func (UnimplementedStorageApiServer) UpdateDeploymentTarget(context.Context, *DeploymentTarget) (*DeploymentTarget, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateDeploymentTarget not implemented")
+}
+func (UnimplementedStorageApiServer) UpdateWorkloadVersion(context.Context, *WorkloadVersion) (*WorkloadVersion, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateWorkloadVersion not implemented")
+}
+func (UnimplementedStorageApiServer) UpdateDeploymentAssignment(context.Context, *DeploymentAssignment) (*DeploymentAssignment, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateDeploymentAssignment not implemented")
+}
+func (UnimplementedStorageApiServer) UpdateHost(context.Context, *Host) (*Host, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateHost not implemented")
+}
+func (UnimplementedStorageApiServer) UpdateReconciler(context.Context, *Reconciler) (*Reconciler, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateReconciler not implemented")
+}
+func (UnimplementedStorageApiServer) UpdateDeployment(context.Context, *Deployment) (*Deployment, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateDeployment not implemented")
 }
 func (UnimplementedStorageApiServer) mustEmbedUnimplementedStorageApiServer() {}
 
@@ -184,6 +268,114 @@ func _StorageApi_UpdateEnvironment_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _StorageApi_UpdateDeploymentTarget_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeploymentTarget)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StorageApiServer).UpdateDeploymentTarget(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.StorageApi/UpdateDeploymentTarget",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StorageApiServer).UpdateDeploymentTarget(ctx, req.(*DeploymentTarget))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _StorageApi_UpdateWorkloadVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(WorkloadVersion)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StorageApiServer).UpdateWorkloadVersion(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.StorageApi/UpdateWorkloadVersion",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StorageApiServer).UpdateWorkloadVersion(ctx, req.(*WorkloadVersion))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _StorageApi_UpdateDeploymentAssignment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeploymentAssignment)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StorageApiServer).UpdateDeploymentAssignment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.StorageApi/UpdateDeploymentAssignment",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StorageApiServer).UpdateDeploymentAssignment(ctx, req.(*DeploymentAssignment))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _StorageApi_UpdateHost_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Host)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StorageApiServer).UpdateHost(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.StorageApi/UpdateHost",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StorageApiServer).UpdateHost(ctx, req.(*Host))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _StorageApi_UpdateReconciler_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Reconciler)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StorageApiServer).UpdateReconciler(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.StorageApi/UpdateReconciler",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StorageApiServer).UpdateReconciler(ctx, req.(*Reconciler))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _StorageApi_UpdateDeployment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Deployment)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StorageApiServer).UpdateDeployment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.StorageApi/UpdateDeployment",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StorageApiServer).UpdateDeployment(ctx, req.(*Deployment))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // StorageApi_ServiceDesc is the grpc.ServiceDesc for StorageApi service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -206,6 +398,30 @@ var StorageApi_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateEnvironment",
 			Handler:    _StorageApi_UpdateEnvironment_Handler,
+		},
+		{
+			MethodName: "UpdateDeploymentTarget",
+			Handler:    _StorageApi_UpdateDeploymentTarget_Handler,
+		},
+		{
+			MethodName: "UpdateWorkloadVersion",
+			Handler:    _StorageApi_UpdateWorkloadVersion_Handler,
+		},
+		{
+			MethodName: "UpdateDeploymentAssignment",
+			Handler:    _StorageApi_UpdateDeploymentAssignment_Handler,
+		},
+		{
+			MethodName: "UpdateHost",
+			Handler:    _StorageApi_UpdateHost_Handler,
+		},
+		{
+			MethodName: "UpdateReconciler",
+			Handler:    _StorageApi_UpdateReconciler_Handler,
+		},
+		{
+			MethodName: "UpdateDeployment",
+			Handler:    _StorageApi_UpdateDeployment_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

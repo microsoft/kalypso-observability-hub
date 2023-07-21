@@ -46,6 +46,7 @@ func (c *postgresClient) Update(ctx context.Context, entity Entity) (Entity, err
 	defer conn.Close()
 	entity, err = entity.update(conn)
 	if err != nil {
+		log.Fatalf("fail to update entity: %v", err)
 		return nil, err
 	}
 	return entity, nil
