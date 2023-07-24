@@ -1,8 +1,10 @@
-package grpcClient
+package client
 
 import (
 	context "context"
+	"errors"
 	"log"
+	"os"
 
 	pb "github.com/microsoft/kalypso-observability-hub/storage/api/grpc/proto"
 	"google.golang.org/grpc"
@@ -30,7 +32,18 @@ type observabilityStorageGrpcClient struct {
 var _ ObservabilityStorageGrpcClient = (*observabilityStorageGrpcClient)(nil)
 
 func NewObservabilityStorageGrpcClient(serverAddr string) ObservabilityStorageGrpcClient {
+
 	return &observabilityStorageGrpcClient{serverAddr: serverAddr}
+}
+
+func GetObservabilityStorageGrpcClient() (ObservabilityStorageGrpcClient, error) {
+	serverAddr := os.Getenv("STORAGE_SERVICE_ADDRESS")
+	if serverAddr == "" {
+		return nil, errors.New("STORAGE_SERVICE_ADDRESS environment variable not set")
+	}
+
+	return NewObservabilityStorageGrpcClient(serverAddr), nil
+
 }
 
 func (c *observabilityStorageGrpcClient) getConnection() (*grpc.ClientConn, error) {
