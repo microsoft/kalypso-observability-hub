@@ -129,7 +129,7 @@ func (r *DeploymentDescriptorReconciler) Reconcile(ctx context.Context, req ctrl
 	}
 
 	// Update Deployment Target
-	_, err = storageClient.UpdateDeploymentTarget(ctx, &pb.DeploymentTarget{
+	dt, err := storageClient.UpdateDeploymentTarget(ctx, &pb.DeploymentTarget{
 		Name:                 descriptorDeploymentTraget.Name,
 		Description:          descriptorDeploymentTraget.Name,
 		EnvironmentId:        env.Id,
@@ -143,7 +143,7 @@ func (r *DeploymentDescriptorReconciler) Reconcile(ctx context.Context, req ctrl
 
 	// Update Workload Version
 	descriptorWorkloadVersion := deploymentDescriptor.Spec.WorkloadVersion
-	_, err = storageClient.UpdateWorkloadVersion(ctx, &pb.WorkloadVersion{
+	wv, err := storageClient.UpdateWorkloadVersion(ctx, &pb.WorkloadVersion{
 		Version:       descriptorWorkloadVersion.Version,
 		WorkloadId:    wkl.Id,
 		BuildId:       descriptorWorkloadVersion.Build,
@@ -151,6 +151,16 @@ func (r *DeploymentDescriptorReconciler) Reconcile(ctx context.Context, req ctrl
 	})
 	if err != nil {
 		return r.manageFailure(ctx, reqLogger, deploymentDescriptor, err, "Failed to update workload version")
+	}
+
+	// Update Deployment Assignment
+	_, err = storageClient.UpdateDeploymentAssignment(ctx, &pb.DeploymentAssignment{
+		DeploymentTargetId: dt.Id,
+		WorkloadVersionId:  wv.Id,
+		GitopsCommitId:     "sdsdsad", //TODO: get this from the flux labels
+	})
+	if err != nil {
+		return r.manageFailure(ctx, reqLogger, deploymentDescriptor, err, "Failed to update deployment assignment")
 	}
 
 	condition := metav1.Condition{
