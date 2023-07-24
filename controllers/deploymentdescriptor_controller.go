@@ -18,13 +18,23 @@ package controllers
 
 import (
 	"context"
+	"fmt"
+	"time"
 
+	"github.com/go-logr/logr"
+	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
+	"github.com/microsoft/kalypso-observability-hub/api/v1alpha1"
 	hubv1alpha1 "github.com/microsoft/kalypso-observability-hub/api/v1alpha1"
+	grpcClient "github.com/microsoft/kalypso-observability-hub/storage/api/grpc/client"
+	pb "github.com/microsoft/kalypso-observability-hub/storage/api/grpc/proto"
 )
 
 // DeploymentDescriptorReconciler reconciles a DeploymentDescriptor object
@@ -47,16 +57,143 @@ type DeploymentDescriptorReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.1/pkg/reconcile
 func (r *DeploymentDescriptorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	reqLogger := log.FromContext(ctx)
+	reqLogger.Info("=== Reconciling Deployment Descriptor  ===")
 
-	// TODO(user): your logic here
+	// Fetch the DeploymentDescriptor instance
+	deploymentDescriptor := &hubv1alpha1.DeploymentDescriptor{}
+	err := r.Get(ctx, req.NamespacedName, deploymentDescriptor)
+	if err != nil {
+		ignroredNotFound := client.IgnoreNotFound(err)
+		if ignroredNotFound != nil {
+			reqLogger.Error(err, "Failed to get Deployment Descriptor")
+		}
+		return ctrl.Result{}, ignroredNotFound
+	}
+
+	// Check if the resource is being deleted
+	if !deploymentDescriptor.ObjectMeta.DeletionTimestamp.IsZero() {
+		return ctrl.Result{}, nil
+	}
+
+	storageClient, err := grpcClient.GetObservabilityStorageGrpcClient()
+	if err != nil {
+		return r.manageFailure(ctx, reqLogger, deploymentDescriptor, err, "Failed to get storage client")
+	}
+
+	descriptorWorkload := deploymentDescriptor.Spec.Workload
+	descriptorApplication := descriptorWorkload.Application
+	descriptorWorkspace := descriptorApplication.Workspace
+
+	// Update Workspace
+	ws, err := storageClient.UpdateWorkspace(ctx, &pb.Workspace{
+		Name:        descriptorWorkspace.Name,
+		Description: descriptorWorkspace.Name,
+	})
+	if err != nil {
+		return r.manageFailure(ctx, reqLogger, deploymentDescriptor, err, "Failed to update workspace")
+	}
+
+	// Update Application
+	app, err := storageClient.UpdateApplication(ctx, &pb.Application{
+		Name:        descriptorApplication.Name,
+		Description: descriptorApplication.Name,
+		WorkspaceId: ws.Id,
+	})
+	if err != nil {
+		return r.manageFailure(ctx, reqLogger, deploymentDescriptor, err, "Failed to update application")
+	}
+
+	// Update Workload
+	wkl, err := storageClient.UpdateWorkload(ctx, &pb.Workload{
+		Name:              descriptorWorkload.Name,
+		Description:       descriptorWorkload.Name,
+		SourceStorageType: v1alpha1.GitStorageType,
+		SourceEndpoint:    fmt.Sprintf("%s/%s/%s", descriptorWorkload.Source.Repo, descriptorWorkload.Source.Branch, descriptorWorkload.Source.Path),
+		ApplicationId:     app.Id,
+	})
+	if err != nil {
+		return r.manageFailure(ctx, reqLogger, deploymentDescriptor, err, "Failed to update workload")
+	}
+
+	descriptorDeploymentTraget := deploymentDescriptor.Spec.DeploymentTarget
+	descriptorEnvironment := descriptorDeploymentTraget.Environment
+
+	// Update Environment
+	env, err := storageClient.UpdateEnvironment(ctx, &pb.Environment{
+		Name:        descriptorEnvironment,
+		Description: descriptorEnvironment,
+	})
+	if err != nil {
+		return r.manageFailure(ctx, reqLogger, deploymentDescriptor, err, "Failed to update environment")
+	}
+
+	// Update Deployment Target
+	_, err = storageClient.UpdateDeploymentTarget(ctx, &pb.DeploymentTarget{
+		Name:                 descriptorDeploymentTraget.Name,
+		Description:          descriptorDeploymentTraget.Name,
+		EnvironmentId:        env.Id,
+		WorkloadId:           wkl.Id,
+		ManifestsStorageType: v1alpha1.GitStorageType,
+		ManifestsEndpoint:    fmt.Sprintf("%s/%s/%s", descriptorDeploymentTraget.Manifests.Repo, descriptorDeploymentTraget.Manifests.Branch, descriptorDeploymentTraget.Manifests.Path),
+	})
+	if err != nil {
+		return r.manageFailure(ctx, reqLogger, deploymentDescriptor, err, "Failed to update deployment target")
+	}
+
+	// Update Workload Version
+	descriptorWorkloadVersion := deploymentDescriptor.Spec.WorkloadVersion
+	_, err = storageClient.UpdateWorkloadVersion(ctx, &pb.WorkloadVersion{
+		Version:       descriptorWorkloadVersion.Version,
+		WorkloadId:    wkl.Id,
+		BuildId:       descriptorWorkloadVersion.Build,
+		BuildCommitId: descriptorWorkloadVersion.Commit,
+	})
+	if err != nil {
+		return r.manageFailure(ctx, reqLogger, deploymentDescriptor, err, "Failed to update workload version")
+	}
+
+	condition := metav1.Condition{
+		Type:   "Ready",
+		Status: metav1.ConditionTrue,
+		Reason: "DeploymentDescriptorReconciled",
+	}
+	meta.SetStatusCondition(&deploymentDescriptor.Status.Conditions, condition)
+
+	updateErr := r.Status().Update(ctx, deploymentDescriptor)
+	if updateErr != nil {
+		reqLogger.Info("Error when updating status.")
+		return ctrl.Result{RequeueAfter: time.Second * 3}, updateErr
+	}
 
 	return ctrl.Result{}, nil
+}
+
+// Gracefully handle errors
+func (r *DeploymentDescriptorReconciler) manageFailure(ctx context.Context, logger logr.Logger, deploymentDescriptor *hubv1alpha1.DeploymentDescriptor, err error, message string) (ctrl.Result, error) {
+	logger.Error(err, message)
+
+	//crerate a condition
+	condition := metav1.Condition{
+		Type:    "Ready",
+		Status:  metav1.ConditionFalse,
+		Reason:  "UpdateFailed",
+		Message: err.Error(),
+	}
+
+	meta.SetStatusCondition(&deploymentDescriptor.Status.Conditions, condition)
+
+	updateErr := r.Status().Update(ctx, deploymentDescriptor)
+	if updateErr != nil {
+		logger.Info("Error when updating status. Requeued")
+		return ctrl.Result{RequeueAfter: time.Second * 3}, updateErr
+	}
+	return ctrl.Result{}, err
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *DeploymentDescriptorReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&hubv1alpha1.DeploymentDescriptor{}).
+		For(&hubv1alpha1.DeploymentDescriptor{}, builder.WithPredicates(predicate.GenerationChangedPredicate{})).
 		Complete(r)
 }

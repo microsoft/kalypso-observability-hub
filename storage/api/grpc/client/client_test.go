@@ -1,4 +1,4 @@
-package grpcClient
+package client
 
 import (
 	context "context"
