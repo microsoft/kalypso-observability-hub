@@ -1,0 +1,10 @@
+delete from deployment;
+delete from reconciler;
+delete from host;
+delete from deployment_assignment;
+delete from workload_version;
+delete from deployment_target;
+delete from environment;
+delete from workload;
+delete from application;
+delete from workspace;

@@ -11,7 +11,7 @@ grafana:
     tag: 9.1.0
   resources:
     requests:
-      cpu: 250m
+      # cpu: 250m
       memory: 750Mi
   grafanaScDashboard:
     image:
@@ -24,18 +24,3 @@ grafanaSvc:
 pvc:
   storageRequest: 1Gi
 kubernetesClusterDomain: cluster.local
-
-# datasources:
-#   prometheus: 
-#     enabeld: true
-#     endpoint:  http://prometheus-server
-#   jaeger:
-#     enabeld: true
-#     endpoint: http://jaeger-query:16686
-#   tempo:
-#     enabeld: true
-#     endpoint: http://monitoring-tempo:3100
-#   loki:
-#     enabeld: true
-#     endpoint: http://monitoring-loki:3100
-
