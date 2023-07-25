@@ -1,6 +1,6 @@
 create table if not exists deployment(
     id serial primary key,
-    gitops_commit_id varchar(40) not null,
+    gitops_commit_id varchar(100) not null,
     reconciler_id int not null references reconciler(id),
     status varchar(20) not null,
     status_message text,

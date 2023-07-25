@@ -31,10 +31,16 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
+	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
 	"github.com/microsoft/kalypso-observability-hub/api/v1alpha1"
 	hubv1alpha1 "github.com/microsoft/kalypso-observability-hub/api/v1alpha1"
 	grpcClient "github.com/microsoft/kalypso-observability-hub/storage/api/grpc/client"
 	pb "github.com/microsoft/kalypso-observability-hub/storage/api/grpc/proto"
+)
+
+const (
+	FluxKustomizationNameLabel      = "kustomize.toolkit.fluxcd.io/name"
+	FluxKustomizationNamespaceLabel = "kustomize.toolkit.fluxcd.io/namespace"
 )
 
 // DeploymentDescriptorReconciler reconciles a DeploymentDescriptor object
@@ -153,11 +159,16 @@ func (r *DeploymentDescriptorReconciler) Reconcile(ctx context.Context, req ctrl
 		return r.manageFailure(ctx, reqLogger, deploymentDescriptor, err, "Failed to update workload version")
 	}
 
+	commit_id, err := r.getCommitFromFluxKustomization(deploymentDescriptor)
+	if err != nil {
+		return r.manageFailure(ctx, reqLogger, deploymentDescriptor, err, "Failed to get commit from flux kustomization")
+	}
+
 	// Update Deployment Assignment
 	_, err = storageClient.UpdateDeploymentAssignment(ctx, &pb.DeploymentAssignment{
 		DeploymentTargetId: dt.Id,
 		WorkloadVersionId:  wv.Id,
-		GitopsCommitId:     "sdsdsad", //TODO: get this from the flux labels
+		GitopsCommitId:     *commit_id,
 	})
 	if err != nil {
 		return r.manageFailure(ctx, reqLogger, deploymentDescriptor, err, "Failed to update deployment assignment")
@@ -177,6 +188,36 @@ func (r *DeploymentDescriptorReconciler) Reconcile(ctx context.Context, req ctrl
 	}
 
 	return ctrl.Result{}, nil
+}
+
+// Get Commit from Flux Kustomization
+func (r *DeploymentDescriptorReconciler) getCommitFromFluxKustomization(deploymentDescriptor *hubv1alpha1.DeploymentDescriptor) (*string, error) {
+	//get the flux kustomization name from the deployment descriptor
+	fluxKustomizationName := deploymentDescriptor.Labels[FluxKustomizationNameLabel]
+	if fluxKustomizationName == "" {
+		return nil, fmt.Errorf("Flux Kustomization name not found in the deployment descriptor")
+	}
+
+	fluxKustomizationNamespace := deploymentDescriptor.Labels[FluxKustomizationNamespaceLabel]
+	if fluxKustomizationNamespace == "" {
+		return nil, fmt.Errorf("Flux Kustomization namespace not found in the deployment descriptor")
+	}
+
+	//get the flux kustomization
+	fluxKustomization := &kustomizev1.Kustomization{}
+	err := r.Get(context.Background(), client.ObjectKey{
+		Name:      fluxKustomizationName,
+		Namespace: fluxKustomizationNamespace,
+	}, fluxKustomization)
+	if err != nil {
+		return nil, err
+	}
+
+	//get the commit from the flux kustomization
+	commit := fluxKustomization.Status.LastAppliedRevision
+
+	return &commit, nil
+
 }
 
 // Gracefully handle errors
