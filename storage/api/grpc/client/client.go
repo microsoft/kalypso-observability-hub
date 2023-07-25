@@ -49,7 +49,7 @@ func GetObservabilityStorageGrpcClient() (ObservabilityStorageGrpcClient, error)
 func (c *observabilityStorageGrpcClient) getConnection() (*grpc.ClientConn, error) {
 	conn, err := grpc.Dial(c.serverAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Fatalf("fail to dial: %v", err)
+		log.Printf("fail to dial: %v", err)
 		return nil, err
 	}
 	return conn, nil

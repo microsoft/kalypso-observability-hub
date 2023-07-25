@@ -1,0 +1,27 @@
+apiVersion: hub.kalypso.io/v1alpha1
+kind: DeploymentDescriptor
+metadata:
+  name: rs-dispatcher-framework-1-1-140-d2-vsu
+spec:
+  workload:
+    name: rs-dispatcher-framework
+    source:
+        repo: https://github.com/GM-SDV/rs-dispatcher-framework
+        branch: main
+        path: .
+    application:
+        name: ucp
+        workspace:
+            name: GM-SDV
+  deploymentTarget:
+    name: vsu
+    environment: d2
+    manifests:
+        repo: https://github.com/GM-SDV/rs-dispatcher-framework-gitops
+        branch: d2
+        path: vsu
+  workloadVersion:
+    version: 1.1.140
+    build: build-134
+    commit: cd7673d9da7e164d3f127f210b03f2facc2d8a6b
+    buildTime: "2023-07-27T23:25:05Z"

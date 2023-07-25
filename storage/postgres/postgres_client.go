@@ -32,7 +32,7 @@ func NewPostgresClient(host string, port int, user, password, dbname, sslmode st
 func (c *postgresClient) getConnection() (*sql.DB, error) {
 	conn, err := sql.Open("postgres", c.connectionString)
 	if err != nil {
-		log.Fatalf("fail to connect to database: %v", err)
+		log.Printf("fail to connect to database: %v", err)
 		return nil, err
 	}
 	return conn, nil
@@ -46,7 +46,7 @@ func (c *postgresClient) Update(ctx context.Context, entity Entity) (Entity, err
 	defer conn.Close()
 	entity, err = entity.update(conn)
 	if err != nil {
-		log.Fatalf("fail to update entity: %v", err)
+		log.Printf("fail to update entity: %v", err)
 		return nil, err
 	}
 	return entity, nil

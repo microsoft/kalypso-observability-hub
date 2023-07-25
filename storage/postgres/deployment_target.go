@@ -21,9 +21,8 @@ func (dt *DeploymentTarget) update(conn *sql.DB) (Entity, error) {
 	err := conn.QueryRow(`INSERT INTO deployment_target 
 	                     (name, description, workload_id, environment_id, labels, manifests_storage_type, manifests_endpoint) 
 						 VALUES ($1, $2, $3, $4, $5, $6, $7)
-						 ON CONFLICT (workload_id, name) DO
+						 ON CONFLICT (workload_id, environment_id, name) DO
 						 UPDATE SET description=$2,
-						 			environment_id=$4, 
 									labels=$5, 
 									manifests_storage_type=$6, 
 									manifests_endpoint=$7,

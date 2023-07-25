@@ -1,0 +1,27 @@
+apiVersion: hub.kalypso.io/v1alpha1
+kind: DeploymentDescriptor
+metadata:
+  name: rs-srm-1-1-121-d4-ssu
+spec:
+  workload:
+    name: rs-srm
+    source:
+        repo: https://github.com/GM-SDV/rs-srm
+        branch: main
+        path: .
+    application:
+        name: ucp
+        workspace:
+            name: GM-SDV
+  deploymentTarget:
+    name: ssu
+    environment: d4
+    manifests:
+        repo: https://github.com/GM-SDV/rs-srm-gitops
+        branch: d4
+        path: ssu
+  workloadVersion:
+    version: 1.1.121
+    build: build-100
+    commit: 342863d9da7e164d3f127f210b03f2facc2d8a6b
+    buildTime: "2023-07-24T23:25:05Z"
