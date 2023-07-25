@@ -24,7 +24,6 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 4,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -239,7 +238,7 @@
         ]
       },
       "gridPos": {
-        "h": 9,
+        "h": 14,
         "w": 22,
         "x": 0,
         "y": 0
@@ -254,7 +253,12 @@
           "show": false
         },
         "showHeader": true,
-        "sortBy": []
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Environment"
+          }
+        ]
       },
       "pluginVersion": "9.1.0",
       "targets": [
@@ -502,14 +506,26 @@
                 "value": 87
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Workload"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 191
+              }
+            ]
           }
         ]
       },
       "gridPos": {
-        "h": 6,
+        "h": 11,
         "w": 24,
         "x": 0,
-        "y": 9
+        "y": 14
       },
       "id": 10,
       "options": {
@@ -539,7 +555,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "select dt.id deployment_target_id, dt.name deployment_target_name,       \n       wk.name workspace_name,\n       a.name application_name, \n       w.name workload_name,\n       max(case e.name\n        when 'd2' THEN wv.version\n        else null\n       end) d2_workload_version,\n       max(case e.name\n        when 'd2' THEN deployments.deployed_workload_version\n        else null\n       end) d2_deployed_workload_version,\n       max(case e.name\n        when 'd2' THEN successfull_reconcilers\n        else null\n       end) d2_successfull_reconcilers,\n       max(case e.name\n        when 'd2' THEN reconcilers\n        else null\n       end) d2_reconcilers,\n\n       max(case e.name\n        when 'd4' THEN wv.version\n        else null\n       end) d4_workload_version,\n       max(case e.name\n        when 'd4' THEN deployments.deployed_workload_version\n        else null\n       end) d4_deployed_workload_version,\n       max(case e.name\n        when 'd4' THEN successfull_reconcilers\n        else null\n       end) d4_successfull_reconcilers,\n       max(case e.name\n        when 'd4' THEN reconcilers\n        else null\n       end) d4_reconcilers,\n\n       max(case e.name\n        when 't2' THEN wv.version\n        else null\n       end) t2_workload_version,\n       max(case e.name\n        when 't2' THEN deployments.deployed_workload_version\n        else null\n       end) t2_deployed_workload_version,\n       max(case e.name\n        when 't2' THEN successfull_reconcilers\n        else null\n       end) t2_successfull_reconcilers,\n       max(case e.name\n        when 't2' THEN reconcilers\n        else null\n       end) t2_reconcilers       \n\nfrom deployment_target dt\n     left outer join (select dt.id deployment_target_id, depl.deployed_workload_version, \n                        sum(\n                        case depl.status\n                            when 'success' THEN 1\n                            else 0\n                        end\n                     ) successfull_reconcilers,\n                     count(1) reconcilers\n     from reconciler r\n          left outer join (select d.reconciler_id, d.status, wv.version deployed_workload_version\n           from deployment d,\n                deployment_assignment da,\n                workload_version wv\n            where d.gitops_commit_id = da.gitops_commit_id \n              and da.workload_version_id = wv.id\n              and d.created_on = (select max(created_on) from deployment where reconciler_id = d.reconciler_id )\n          ) depl on r.id = depl.reconciler_id,\n          deployment_target dt\n     where r.manifests_storage_type = dt.manifests_storage_type\n          and r.manifests_endpoint = dt.manifests_endpoint\n    group by deployment_target_id, deployed_workload_version) deployments on dt.id = deployments.deployment_target_id,    \n     deployment_assignment da,\n     workload_version wv,\n     workload w,\n     application a,\n     workspace wk,\n     environment e\nwhere dt.id = da.deployment_target_id\n    and da.workload_version_id = wv.id\n    and wv.workload_id = w.id\n    and w.application_id = a.id\n    and a.workspace_id = wk.id\n    and dt.environment_id = e.id    \n    and da.created_on = (select max(created_on) from deployment_assignment where deployment_target_id = dt.id)\ngroup by dt.id,  deployment_target_name,\n       workspace_name,\n       application_name, \n       workload_name    ",
+          "rawSql": "select dt.name deployment_target_name,       \n       wk.name workspace_name,\n       a.name application_name, \n       w.name workload_name,\n       max(case e.name\n        when 'd2' THEN wv.version\n        else null\n       end) d2_workload_version,\n       max(case e.name\n        when 'd2' THEN deployments.deployed_workload_version\n        else null\n       end) d2_deployed_workload_version,\n       max(case e.name\n        when 'd2' THEN successfull_reconcilers\n        else null\n       end) d2_successfull_reconcilers,\n       max(case e.name\n        when 'd2' THEN reconcilers\n        else null\n       end) d2_reconcilers,\n\n       max(case e.name\n        when 'd4' THEN wv.version\n        else null\n       end) d4_workload_version,\n       max(case e.name\n        when 'd4' THEN deployments.deployed_workload_version\n        else null\n       end) d4_deployed_workload_version,\n       max(case e.name\n        when 'd4' THEN successfull_reconcilers\n        else null\n       end) d4_successfull_reconcilers,\n       max(case e.name\n        when 'd4' THEN reconcilers\n        else null\n       end) d4_reconcilers,\n\n       max(case e.name\n        when 't2' THEN wv.version\n        else null\n       end) t2_workload_version,\n       max(case e.name\n        when 't2' THEN deployments.deployed_workload_version\n        else null\n       end) t2_deployed_workload_version,\n       max(case e.name\n        when 't2' THEN successfull_reconcilers\n        else null\n       end) t2_successfull_reconcilers,\n       max(case e.name\n        when 't2' THEN reconcilers\n        else null\n       end) t2_reconcilers       \n\nfrom deployment_target dt\n     left outer join (select dt.id deployment_target_id, depl.deployed_workload_version, \n                        sum(\n                        case depl.status\n                            when 'success' THEN 1\n                            else 0\n                        end\n                     ) successfull_reconcilers,\n                     count(1) reconcilers\n     from reconciler r\n          left outer join (select d.reconciler_id, d.status, wv.version deployed_workload_version\n           from deployment d,\n                deployment_assignment da,\n                workload_version wv\n            where d.gitops_commit_id = da.gitops_commit_id \n              and da.workload_version_id = wv.id\n              and d.created_on = (select max(created_on) from deployment where reconciler_id = d.reconciler_id )\n          ) depl on r.id = depl.reconciler_id,\n          deployment_target dt\n     where r.manifests_storage_type = dt.manifests_storage_type\n          and r.manifests_endpoint = dt.manifests_endpoint\n    group by deployment_target_id, deployed_workload_version) deployments on dt.id = deployments.deployment_target_id,    \n     deployment_assignment da,\n     workload_version wv,\n     workload w,\n     application a,\n     workspace wk,\n     environment e\nwhere dt.id = da.deployment_target_id\n    and da.workload_version_id = wv.id\n    and wv.workload_id = w.id\n    and w.application_id = a.id\n    and a.workspace_id = wk.id\n    and dt.environment_id = e.id    \n    and da.created_on = (select max(created_on) from deployment_assignment where deployment_target_id = dt.id)\ngroup by  deployment_target_name,\n       workspace_name,\n       application_name, \n       workload_name    ",
           "refId": "A",
           "select": [
             [
@@ -629,6 +645,6 @@
   "timezone": "",
   "title": "Deployment Observability",
   "uid": "9XvMES3Vz",
-  "version": 27,
+  "version": 28,
   "weekStart": ""
 }
