@@ -1,0 +1,660 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: deployment-observability-dashboard
+  labels:
+    grafana_dashboard: "1"  
+  {{- include "grafana.labels" . | nindent 4 }}    
+data:
+  deployment-observability-dashboard.json:
+    |-
+      {
+        "annotations": {
+          "list": [
+            {
+              "builtIn": 1,
+              "datasource": {
+                "type": "grafana",
+                "uid": "-- Grafana --"
+              },
+              "enable": true,
+              "hide": true,
+              "iconColor": "rgba(0, 211, 255, 1)",
+              "name": "Annotations & Alerts",
+              "target": {
+                "limit": 100,
+                "matchAny": false,
+                "tags": [],
+                "type": "dashboard"
+              },
+              "type": "dashboard"
+            }
+          ]
+        },
+        "editable": true,
+        "fiscalYearStartMonth": 0,
+        "graphTooltip": 0,
+        "links": [],
+        "liveNow": false,
+        "panels": [
+          {
+            "datasource": {
+              "type": "postgres",
+              "uid": "P44368ADAD746BC27"
+            },
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "thresholds"
+                },
+                "custom": {
+                  "align": "auto",
+                  "displayMode": "auto",
+                  "inspect": false
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": [
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "Clusters"
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.width",
+                      "value": 94
+                    }
+                  ]
+                },
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "Environment"
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.width",
+                      "value": 105
+                    },
+                    {
+                      "id": "custom.minWidth"
+                    },
+                    {
+                      "id": "links",
+                      "value": [
+                        {
+                          "targetBlank": true,
+                          "title": "",
+                          "url": "http://localhost:3000/d/tJyhXSqVk/environment-state?var-Environment=${__data.fields.environment_id}&var-Workload=${__data.fields.workload_id}&var-DeploymentTarget=${__data.fields.deployment_target_id}"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "Clusters"
+                  },
+                  "properties": [
+                    {
+                      "id": "links",
+                      "value": [
+                        {
+                          "targetBlank": true,
+                          "title": "",
+                          "url": "http://localhost:3000/d/IPrZeI34k/cluster-state?var-Environment=${__data.fields.environment_id}&var-Workload=${__data.fields.workload_id}&var-DeploymentTarget=${__data.fields.deployment_target_id}&var-Status=${__data.fields.status}"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "deployment_target_id"
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.hidden",
+                      "value": true
+                    }
+                  ]
+                },
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "workload_id"
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.hidden",
+                      "value": true
+                    }
+                  ]
+                },
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "environment_id"
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.hidden",
+                      "value": true
+                    }
+                  ]
+                },
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "Workspace"
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.width",
+                      "value": 94
+                    }
+                  ]
+                },
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "Application"
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.width",
+                      "value": 128
+                    }
+                  ]
+                },
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "Version"
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.width",
+                      "value": 89
+                    }
+                  ]
+                },
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "Deployed Version"
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.width",
+                      "value": 140
+                    }
+                  ]
+                },
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "Status"
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.width",
+                      "value": 83
+                    },
+                    {
+                      "id": "custom.displayMode",
+                      "value": "color-text"
+                    },
+                    {
+                      "id": "mappings",
+                      "value": [
+                        {
+                          "options": {
+                            "failure": {
+                              "color": "dark-red",
+                              "index": 1
+                            },
+                            "in_progress": {
+                              "color": "dark-blue",
+                              "index": 2
+                            },
+                            "success": {
+                              "color": "dark-green",
+                              "index": 0
+                            }
+                          },
+                          "type": "value"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "gridPos": {
+              "h": 14,
+              "w": 22,
+              "x": 0,
+              "y": 0
+            },
+            "id": 2,
+            "options": {
+              "footer": {
+                "fields": "",
+                "reducer": [
+                  "sum"
+                ],
+                "show": false
+              },
+              "showHeader": true,
+              "sortBy": [
+                {
+                  "desc": false,
+                  "displayName": "Environment"
+                }
+              ]
+            },
+            "pluginVersion": "9.1.0",
+            "targets": [
+              {
+                "datasource": {
+                  "type": "postgres",
+                  "uid": "P44368ADAD746BC27"
+                },
+                "format": "table",
+                "group": [],
+                "metricColumn": "none",
+                "rawQuery": true,
+                "rawSql": "select dt.name deployment_target_name, \n       e.name environment_name,\n       wk.name workspace_name,\n       a.name application_name,\n       w.name workload_name,\n       wv.version workload_version,\n       deployments.deployed_workload_version,\n       deployments.status,\n       deployments.reconcilers,\n       e.id environment_id,\n       dt.id deployment_target_id,\n       w.id workload_id\nfrom deployment_target dt\n     left outer join (select dt.id deployment_target_id, depl.status, depl.deployed_workload_version, count(1) reconcilers\n     from reconciler r\n          left outer join (select d.reconciler_id, d.status, wv.version deployed_workload_version\n           from deployment d,\n                deployment_assignment da,\n                workload_version wv\n            where d.gitops_commit_id = da.gitops_commit_id \n              and da.workload_version_id = wv.id\n              and d.created_on = (select max(created_on) from deployment where reconciler_id = d.reconciler_id)\n          ) depl on r.id = depl.reconciler_id,\n          deployment_target dt\n     where r.manifests_storage_type = dt.manifests_storage_type\n          and r.manifests_endpoint = dt.manifests_endpoint\n    group by deployment_target_id, status, deployed_workload_version) deployments on dt.id = deployments.deployment_target_id,    \n     deployment_assignment da,\n     workload_version wv,\n     workload w,\n     application a,\n     workspace wk,\n     environment e\nwhere dt.id = da.deployment_target_id\n    and da.workload_version_id = wv.id\n    and wv.workload_id = w.id\n    and w.application_id = a.id\n    and a.workspace_id = wk.id\n    and dt.environment_id = e.id    \n    and da.created_on = (select max(created_on) from deployment_assignment where deployment_target_id = dt.id);",
+                "refId": "A",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "column"
+                    }
+                  ]
+                ],
+                "timeColumn": "time",
+                "where": [
+                  {
+                    "name": "$__timeFilter",
+                    "params": [],
+                    "type": "macro"
+                  }
+                ]
+              }
+            ],
+            "title": "Environments State",
+            "transformations": [
+              {
+                "id": "organize",
+                "options": {
+                  "excludeByName": {
+                    "deployment_target_id": false,
+                    "environment_id": false,
+                    "workload_id": false
+                  },
+                  "indexByName": {
+                    "application_name": 1,
+                    "deployed_workload_version": 6,
+                    "deployment_target_name": 4,
+                    "environment_name": 2,
+                    "reconcilers": 8,
+                    "status": 7,
+                    "workload_name": 3,
+                    "workload_version": 5,
+                    "workspace_name": 0
+                  },
+                  "renameByName": {
+                    "application_name": "Application",
+                    "deployed_workload_version": "Deployed Version",
+                    "deployment_target_name": "Deployment Target",
+                    "environemnt_name": "Environment",
+                    "environment_name": "Environment",
+                    "reconcilers": "Clusters",
+                    "status": "Status",
+                    "workload_name": "Workload",
+                    "workload_version": "Version",
+                    "workspace_name": "Workspace"
+                  }
+                }
+              }
+            ],
+            "type": "table"
+          },
+          {
+            "datasource": {
+              "type": "postgres",
+              "uid": "P44368ADAD746BC27"
+            },
+            "description": "",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "thresholds"
+                },
+                "custom": {
+                  "align": "auto",
+                  "displayMode": "auto",
+                  "inspect": false
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": [
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "D2 Scheduled"
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.width",
+                      "value": 107
+                    }
+                  ]
+                },
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "D2 Deployed"
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.width",
+                      "value": 96
+                    }
+                  ]
+                },
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "D2 Clusters"
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.width",
+                      "value": 94
+                    }
+                  ]
+                },
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "D2 Successful"
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.width",
+                      "value": 106
+                    }
+                  ]
+                },
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "D4 Scheduled"
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.width",
+                      "value": 108
+                    }
+                  ]
+                },
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "D4 Deployed"
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.width",
+                      "value": 101
+                    }
+                  ]
+                },
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "D4 Successful"
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.width",
+                      "value": 110
+                    }
+                  ]
+                },
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "D4 Clusters"
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.width",
+                      "value": 98
+                    }
+                  ]
+                },
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "T2 Scheduled"
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.width",
+                      "value": 105
+                    }
+                  ]
+                },
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "T2 Deployed"
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.width",
+                      "value": 96
+                    }
+                  ]
+                },
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "T2 Successful"
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.width",
+                      "value": 107
+                    }
+                  ]
+                },
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "T2 clusters"
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.width",
+                      "value": 87
+                    }
+                  ]
+                },
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "Workload"
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.width",
+                      "value": 191
+                    }
+                  ]
+                }
+              ]
+            },
+            "gridPos": {
+              "h": 11,
+              "w": 24,
+              "x": 0,
+              "y": 14
+            },
+            "id": 10,
+            "options": {
+              "footer": {
+                "fields": "",
+                "reducer": [
+                  "sum"
+                ],
+                "show": false
+              },
+              "showHeader": true,
+              "sortBy": [
+                {
+                  "desc": false,
+                  "displayName": "T2 Successful"
+                }
+              ]
+            },
+            "pluginVersion": "9.1.0",
+            "targets": [
+              {
+                "datasource": {
+                  "type": "postgres",
+                  "uid": "P44368ADAD746BC27"
+                },
+                "format": "table",
+                "group": [],
+                "metricColumn": "none",
+                "rawQuery": true,
+                "rawSql": "select dt.name deployment_target_name,       \n       wk.name workspace_name,\n       a.name application_name, \n       w.name workload_name,\n       max(case e.name\n        when 'd2' THEN wv.version\n        else null\n       end) d2_workload_version,\n       max(case e.name\n        when 'd2' THEN deployments.deployed_workload_version\n        else null\n       end) d2_deployed_workload_version,\n       max(case e.name\n        when 'd2' THEN successfull_reconcilers\n        else null\n       end) d2_successfull_reconcilers,\n       max(case e.name\n        when 'd2' THEN reconcilers\n        else null\n       end) d2_reconcilers,\n\n       max(case e.name\n        when 'd4' THEN wv.version\n        else null\n       end) d4_workload_version,\n       max(case e.name\n        when 'd4' THEN deployments.deployed_workload_version\n        else null\n       end) d4_deployed_workload_version,\n       max(case e.name\n        when 'd4' THEN successfull_reconcilers\n        else null\n       end) d4_successfull_reconcilers,\n       max(case e.name\n        when 'd4' THEN reconcilers\n        else null\n       end) d4_reconcilers,\n\n       max(case e.name\n        when 't2' THEN wv.version\n        else null\n       end) t2_workload_version,\n       max(case e.name\n        when 't2' THEN deployments.deployed_workload_version\n        else null\n       end) t2_deployed_workload_version,\n       max(case e.name\n        when 't2' THEN successfull_reconcilers\n        else null\n       end) t2_successfull_reconcilers,\n       max(case e.name\n        when 't2' THEN reconcilers\n        else null\n       end) t2_reconcilers       \n\nfrom deployment_target dt\n     left outer join (select dt.id deployment_target_id, depl.deployed_workload_version, \n                        sum(\n                        case depl.status\n                            when 'success' THEN 1\n                            else 0\n                        end\n                     ) successfull_reconcilers,\n                     count(1) reconcilers\n     from reconciler r\n          left outer join (select d.reconciler_id, d.status, wv.version deployed_workload_version\n           from deployment d,\n                deployment_assignment da,\n                workload_version wv\n            where d.gitops_commit_id = da.gitops_commit_id \n              and da.workload_version_id = wv.id\n              and d.created_on = (select max(created_on) from deployment where reconciler_id = d.reconciler_id )\n          ) depl on r.id = depl.reconciler_id,\n          deployment_target dt\n     where r.manifests_storage_type = dt.manifests_storage_type\n          and r.manifests_endpoint = dt.manifests_endpoint\n    group by deployment_target_id, deployed_workload_version) deployments on dt.id = deployments.deployment_target_id,    \n     deployment_assignment da,\n     workload_version wv,\n     workload w,\n     application a,\n     workspace wk,\n     environment e\nwhere dt.id = da.deployment_target_id\n    and da.workload_version_id = wv.id\n    and wv.workload_id = w.id\n    and w.application_id = a.id\n    and a.workspace_id = wk.id\n    and dt.environment_id = e.id    \n    and da.created_on = (select max(created_on) from deployment_assignment where deployment_target_id = dt.id)\ngroup by  deployment_target_name,\n       workspace_name,\n       application_name, \n       workload_name    ",
+                "refId": "A",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "column"
+                    }
+                  ]
+                ],
+                "timeColumn": "time",
+                "where": [
+                  {
+                    "name": "$__timeFilter",
+                    "params": [],
+                    "type": "macro"
+                  }
+                ]
+              }
+            ],
+            "title": "Environment Discrepancies",
+            "transformations": [
+              {
+                "id": "organize",
+                "options": {
+                  "excludeByName": {
+                    "deployment_target_id": true
+                  },
+                  "indexByName": {
+                    "application_name": 1,
+                    "deployment_target_id": 4,
+                    "deployment_target_name": 3,
+                    "dev_deployed_workload_version": 6,
+                    "dev_reconcilers": 8,
+                    "dev_successfull_reconcilers": 7,
+                    "dev_workload_version": 5,
+                    "prod_deployed_workload_version": 14,
+                    "prod_reconcilers": 16,
+                    "prod_successfull_reconcilers": 15,
+                    "prod_workload_version": 13,
+                    "qa_deployed_workload_version": 10,
+                    "qa_reconcilers": 12,
+                    "qa_successfull_reconcilers": 11,
+                    "qa_workload_version": 9,
+                    "workload_name": 2,
+                    "workspace_name": 0
+                  },
+                  "renameByName": {
+                    "application_name": "Application",
+                    "d2_deployed_workload_version": "D2 Deployed",
+                    "d2_reconcilers": "D2 Successful",
+                    "d2_successfull_reconcilers": "D2 Clusters",
+                    "d2_workload_version": "D2 Scheduled",
+                    "d4_deployed_workload_version": "D4 Deployed",
+                    "d4_reconcilers": "D4 Clusters",
+                    "d4_successfull_reconcilers": "D4 Successful",
+                    "d4_workload_version": "D4 Scheduled",
+                    "deployment_target_id": "",
+                    "deployment_target_name": "Deployment Target",
+                    "dev_workload_version": "",
+                    "t2_deployed_workload_version": "T2 Deployed",
+                    "t2_reconcilers": "T2 clusters",
+                    "t2_successfull_reconcilers": "T2 Successful",
+                    "t2_workload_version": "T2 Scheduled",
+                    "workload_name": "Workload",
+                    "workspace_name": "Workspace"
+                  }
+                }
+              }
+            ],
+            "type": "table"
+          }
+        ],
+        "refresh": false,
+        "schemaVersion": 37,
+        "style": "dark",
+        "tags": [],
+        "templating": {
+          "list": []
+        },
+        "time": {
+          "from": "now-24h",
+          "to": "now"
+        },
+        "timepicker": {},
+        "timezone": "",
+        "title": "Deployment Observability",
+        "uid": "9XvMES3Vz",
+        "version": 28,
+        "weekStart": ""
+      }
