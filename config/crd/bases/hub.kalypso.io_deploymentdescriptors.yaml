@@ -111,7 +111,6 @@ spec:
               workloadVersion:
                 properties:
                   build:
-                    minLength: 0
                     type: string
                   buildTime:
                     format: date-time
@@ -123,8 +122,6 @@ spec:
                     minLength: 0
                     type: string
                 required:
-                - build
-                - buildTime
                 - commit
                 - version
                 type: object
