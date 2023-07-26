@@ -73,7 +73,7 @@ type WorkloadVersionSpec struct {
 	//+kubebuilder:validation:MinLength=0
 	Version string `json:"version"`
 
-	//+kubebuilder:validation:MinLength=0
+	//+optional
 	Build string `json:"build"`
 
 	//+kubebuilder:validation:MinLength=0
@@ -81,6 +81,7 @@ type WorkloadVersionSpec struct {
 
 	// +kubebuilder:validation:Type=string
 	// +kubebuilder:validation:Format=date-time
+	// +optional
 	BuildTime metav1.Time `json:"buildTime"`
 }
 
