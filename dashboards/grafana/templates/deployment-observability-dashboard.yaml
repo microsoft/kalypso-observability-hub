@@ -326,14 +326,14 @@ data:
                   },
                   "renameByName": {
                     "application_name": "Application",
-                    "deployed_workload_version": "Deployed Version",
+                    "deployed_workload_version": "Deployed",
                     "deployment_target_name": "Deployment Target",
                     "environemnt_name": "Environment",
                     "environment_name": "Environment",
                     "reconcilers": "Clusters",
                     "status": "Status",
                     "workload_name": "Workload",
-                    "workload_version": "Version",
+                    "workload_version": "Scheduled",
                     "workspace_name": "Workspace"
                   }
                 }
@@ -617,8 +617,8 @@ data:
                   "renameByName": {
                     "application_name": "Application",
                     "d2_deployed_workload_version": "D2 Deployed",
-                    "d2_reconcilers": "D2 Successful",
-                    "d2_successfull_reconcilers": "D2 Clusters",
+                    "d2_reconcilers": "D2 Clusters",
+                    "d2_successfull_reconcilers": "D2 Successful",
                     "d2_workload_version": "D2 Scheduled",
                     "d4_deployed_workload_version": "D4 Deployed",
                     "d4_reconcilers": "D4 Clusters",
@@ -655,6 +655,6 @@ data:
         "timezone": "",
         "title": "Deployment Observability",
         "uid": "9XvMES3Vz",
-        "version": 28,
+        "version": 1,
         "weekStart": ""
       }

@@ -89,8 +89,9 @@ do
     
     total_configs=$(get_all_configs)
 
-    commit_id=$(echo $total_configs | jq '.data[0].properties.sourceSyncedCommitId')
-    compliance_state=$(echo $total_configs | jq '.data[0].properties.complianceState')
+    commit_id=$(echo $total_configs | jq -r '.data[0].properties.sourceSyncedCommitId')
+    
+    compliance_state=$(echo $total_configs | jq -r '.data[0].properties.complianceState')
 
     echo $total_configs
     echo $commit_id
@@ -110,10 +111,12 @@ do
           status="in_progress"
       fi
 
-      query="INSERT INTO deployment (gitops_commit_id, reconciler_id, status, status_message) VALUES ("\'$commit_id\'", "\'$reconciler_id\'", "\'$status\'", '') \
+      status_message=$(echo $total_configs | jq -r '.data[0].properties.statuses[1].message')
+
+      query="INSERT INTO deployment (gitops_commit_id, reconciler_id, status, status_message) VALUES ("\'$commit_id\'", "\'$reconciler_id\'", "\'$status\'", "\'$status_message\'") \
                 ON CONFLICT (gitops_commit_id, reconciler_id) DO \
                 UPDATE SET status="\'$status\'", \
-                          status_message='', \
+                          status_message="\'$status_message\'", \
                           updated_on=current_timestamp, \
                           updated_by=current_user"
       psql -h "$pg_host" -U "$pg_user" -d "$pg_database" -c "$query;"    
