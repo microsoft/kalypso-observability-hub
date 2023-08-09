@@ -30,7 +30,7 @@ At high level Deployment Observability Hub consists of `storage`, `API` and `con
 Storage is a database containing the deployment observability data. The data can serve as a datasource for the tools, such as Grafana. 
 There is not any requirements regarding the exact database implementation. In this implementation, PostgreSQL has been selected. 
 
-The nature of the data to be stored (see the [data model](./docs/images/DeploymentObservabilityLogicalModel.png)) is relational, representing the state of the environemnts. It's not a time series data. The [reports}(./docs/images/DeploymentObservabilityReports.png), that we are targeting to build, are based on correlation of many different entities. Storing this data in a time series database would hardly make sense and querying it with query languages like PromQL would be very hard and cumbersome. With that said, a relational database will make a good fit to store and query the deployment observability hub data.
+The nature of the data to be stored (see the [data model](./docs/images/DeploymentObservabilityLogicalModel.png)) is relational, representing the state of the environments. It's not a time series data. The [reports](./docs/images/DeploymentObservabilityReports.png), that we are targeting to build, are based on correlation of many different entities. Storing this data in a time series database would hardly make sense and querying it with query languages like PromQL would be very hard and cumbersome. With that said, a relational database will make a good fit to store and query the deployment observability hub data.
 
 #### API
 
