@@ -30,6 +30,8 @@ At high level Deployment Observability Hub consists of `storage`, `API` and `con
 Storage is a database containing the deployment observability data. The data can serve as a datasource for the tools, such as Grafana. 
 There is not any requirements regarding the exact database implementation. In this implementation, PostgreSQL has been selected. 
 
+The nature of the data to be stored (see the [data model](./docs/images/DeploymentObservabilityLogicalModel.png)) is relational, representing the state of the environemnts. It's not a time series data. The [reports}(./docs/images/DeploymentObservabilityReports.png), that we are targeting to build, are based on correlation of many different entities. Storing this data in a time series database would hardly make sense and querying it with query languages like PromQL would be very hard and cumbersome. With that said, a relational database will make a good fit to store and query the deployment observability hub data.
+
 #### API
 
 External systems, for example GitHub CD workflows, may query the deployment observability hub regarding the state of the rollout. They communicate with the hub via API, exposed with OpenAPI.
@@ -57,9 +59,15 @@ The deployment descriptors are delivered to the observability hub K8s cluster fr
 
 #### Real deployment state
 
-The facts of actual deployment are coming from the hosts. For example, Azure Arc GitOps extension, installed on the hosts, reports to Azure Resource Graph the compliance status with the GitOps repositories. It reports what GitOps commit has been deployed to a host, when and in what status. This deployment state data is pulled from ARG to the observability hub and watched by the observability hub controller. 
+The facts of actual deployment are coming from the hosts. The reconcilers on the clusters report to the deployment state storage the compliance status with the GitOps repositories. They report what GitOps commit has been deployed to a host, when and in what status. This deployment state data is pulled to the observability hub and watched by the observability hub controller. 
 
-Depending on the host platform and the reconciler implementation, the delivery channel of the deployment state data to the observability hub may vary. It can be implemented on top of Azure Arc GitOps extensions and ARG, as described above for the Azure Arc enabled K8s clusters; it can be built on top of OpenTelemetry protocol with a setup of Otel Collectors on the host and the observability hub; it can use custom agents, running on the hosts and submitting deployment state directly to the observability hub; or it can be a combination of those approaches. 
+Depending on the host platform and the reconciler implementation, the delivery channel of the deployment state data to the deployment state storage, nature of the deployment state storage and the path to the deployment observability hub may vary. To name just a few options:
+
+ - Azure Arc GitOPs extension, installed on the workload K8s cluster, reports the deployment state to Azure Resource Graph (ARG). In this case ARG is the deployment state storage. The observability hub controller polls ARG and delivers the deployment state data to the observability hub.
+ - Flux exposes Prometheus metrics with the deployment state data, which is delivered to Azure Monitor with any [preferred channel](https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/prometheus-metrics-overview). With this option, Azure Monitor metrics database is the deployment state storage. The observability hub controller polls Azure Monitor and delivers the deployment state data to the observability hub to store it in normalized form.
+ - Custom agents on the K8s clusters and VMs report deployment state directly to the observability hub by submitting the deployment custom resource on the observability hub cluster. In this case the deployment state storage is bypassed. The observability hub controller watches the deployment custom resources and updates tables in the database accordingly.   
+ - Custom agents on the K8s clusters and VMs deliver the deployment state data on top of OpenTelemetry protocol with a setup of Otel Collectors on the host and the observability hub side. This is the most flexible option that addresses challenges with the network hierarchy, restricted connections, semi-connected clusters and multi-cloud systems. It is also a very robust solution which allows to distribute deployment state data across multiple backends without introducing any heavy dependencies. With this approach, the deployment observability hub is just one of backends receiving the deployment state data.
+ - Combination of the options above            
 
 At this point the observability hub implementation is focused on K8s clusters with Azure Arc GitOps extension installed. The observability hub controller provides out-of-the-box functionality to pull deployment state from the Azure Resource Graph.
 
