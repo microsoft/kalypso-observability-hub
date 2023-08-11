@@ -63,7 +63,7 @@ spec:
                 values:
                 - linux
       containers:
-      - name: api-server      
+      - name: grpc-api-server      
         command:
         - /server
         env:
