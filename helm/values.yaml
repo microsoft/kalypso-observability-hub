@@ -1,0 +1,54 @@
+apiServer:
+  replicas: 1
+  image:
+    repository: ghcr.io/microsoft/kalypso-observability-hub-api-server
+    tag: 0.0.1-3
+  resources:
+    limits:
+      cpu: 500m
+      memory: 128Mi
+    requests:
+      cpu: 10m
+      memory: 64Mi
+  postgresHost: localhost
+  postgresPort: 5432
+  postgresUser: creator
+  postgresPassword: c67
+  postgresDbName: hub
+  postgresSslmode: disable
+  service:
+    type: ClusterIP
+    port: 50051
+
+controllerManager:
+  kubeRbacProxy:
+    image:
+      repository: gcr.io/kubebuilder/kube-rbac-proxy
+      tag: v0.13.1
+    resources:
+      limits:
+        cpu: 500m
+        memory: 128Mi
+      requests:
+        cpu: 5m
+        memory: 64Mi
+  manager:
+    image:
+      repository: kaizentm/kalypso
+      tag: 1.0.1
+    resources:
+      limits:
+        cpu: 500m
+        memory: 128Mi
+      requests:
+        cpu: 10m
+        memory: 64Mi
+  replicas: 1
+kubernetesClusterDomain: cluster.local
+metricsService:
+  ports:
+  - name: https
+    port: 8443
+    protocol: TCP
+    targetPort: https
+  type: ClusterIP

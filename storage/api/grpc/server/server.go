@@ -6,20 +6,28 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
+	"strconv"
 
 	pb "github.com/microsoft/kalypso-observability-hub/storage/api/grpc/proto"
 	db "github.com/microsoft/kalypso-observability-hub/storage/postgres"
 	"google.golang.org/grpc"
+
+	"google.golang.org/grpc/health"
+	"google.golang.org/grpc/health/grpc_health_v1"
 )
 
 var (
-	port             = flag.Int("port", 50051, "The server port")
-	postgresHost     = flag.String("postgresHost", "localhost", "Postgres Host")
-	postgresPort     = flag.Int("postgresPort", 5432, "Postgres Port")
-	postgresUser     = flag.String("postgresUser", "creator", "Postgres User")
-	postgresPassword = flag.String("postgresPassword", "c67", "Postgres Password")
-	postgresDbName   = flag.String("postgresDbName", "hub", "Postgres Db Name")
-	postgresSslmode  = flag.String("postgresSslmode", "disable", "Postgres Db Name")
+	port             *string
+	postgresHost     *string
+	postgresPort     *string
+	postgresUser     *string
+	postgresPassword *string
+	postgresDbName   *string
+	postgresSslmode  *string
+
+	portInt         int
+	postgresPortInt int
 )
 
 type storageApiServer struct {
@@ -292,17 +300,54 @@ func newStorageApiServer(dbClient db.DBClient) *storageApiServer {
 	return &storageApiServer{dbClient: dbClient}
 }
 
+func getEnv(key string) *string {
+	// if ther is an env variable with the key, return it
+	if value, ok := os.LookupEnv(key); ok {
+		return &value
+	} else {
+		// throw an error if there is no env variable with the key
+		log.Fatalf("environment variable %s not set", key)
+		return nil
+	}
+}
+
+func readConfigValuesFromEnv() {
+	port = getEnv("PORT")
+	postgresHost = getEnv("POSTGRES_HOST")
+	postgresPort = getEnv("POSTGRES_PORT")
+	postgresUser = getEnv("POSTGRES_USER")
+	postgresPassword = getEnv("POSTGRES_PASSWORD")
+	postgresDbName = getEnv("POSTGRES_DBNAME")
+	postgresSslmode = getEnv("POSTGRES_SSL_MODE")
+
+	var err error
+	portInt, err = strconv.Atoi(*port)
+	if err != nil {
+		log.Fatalf("failed to convert port to int: %v", err)
+	}
+	postgresPortInt, err = strconv.Atoi(*postgresPort)
+	if err != nil {
+		log.Fatalf("failed to convert postgres port to int: %v", err)
+	}
+
+}
+
 func main() {
 	flag.Parse()
-	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", *port))
+	readConfigValuesFromEnv()
+
+	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", portInt))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	grpcServer := grpc.NewServer()
-	dbClient := db.NewPostgresClient(*postgresHost, *postgresPort, *postgresUser, *postgresPassword, *postgresDbName, *postgresSslmode)
+
+	grpc_health_v1.RegisterHealthServer(grpcServer, health.NewServer())
+
+	dbClient := db.NewPostgresClient(*postgresHost, postgresPortInt, *postgresUser, *postgresPassword, *postgresDbName, *postgresSslmode)
 	pb.RegisterStorageApiServer(grpcServer, newStorageApiServer(dbClient))
 	//log starting the server
-	log.Printf("Starting server on port %d", *port)
+	log.Printf("Starting server on port %d", portInt)
 
 	grpcServer.Serve(lis)
 

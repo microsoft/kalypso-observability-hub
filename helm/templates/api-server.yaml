@@ -1,0 +1,133 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-server-config
+  labels:
+    app.kubernetes.io/component: api
+    app.kubernetes.io/created-by: kalypso-observability-hub
+    app.kubernetes.io/part-of: kalypso-observability-hub
+    control-plane: api-server
+data:
+  POSTGRES_HOST: {{ .Values.apiServer.postgresHost }}
+  POSTGRES_PORT: {{ .Values.apiServer.postgresPort | quote}}
+  POSTGRES_DBNAME: {{ .Values.apiServer.postgresDbName }}
+  POSTGRES_SSL_MODE: {{ .Values.apiServer.postgresSslmode }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: api-server-secret
+  labels:
+    app.kubernetes.io/component: api
+    app.kubernetes.io/created-by: kalypso-observability-hub
+    app.kubernetes.io/part-of: kalypso-observability-hub
+    control-plane: api-server
+type: Opaque
+data:
+  POSTGRES_USER: {{ .Values.apiServer.postgresUser | b64enc }}
+  POSTGRES_PASSWORD: {{ .Values.apiServer.postgresPassword | b64enc }}
+---  
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kalypso-observability-hub-api-server
+  labels:
+    app.kubernetes.io/component: api
+    app.kubernetes.io/created-by: kalypso-observability-hub
+    app.kubernetes.io/part-of: kalypso-observability-hub
+    control-plane: api-server
+spec:
+  replicas: {{ .Values.apiServer.replicas }}
+  selector:
+    matchLabels:
+      control-plane: api-server
+  template:
+    metadata:
+      labels:
+        control-plane: api-server
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/arch
+                operator: In
+                values:
+                - amd64
+                - arm64
+                - ppc64le
+                - s390x
+              - key: kubernetes.io/os
+                operator: In
+                values:
+                - linux
+      containers:
+      - name: api-server      
+        command:
+        - /server
+        env:
+        - name: POSTGRES_HOST
+          valueFrom:
+            configMapKeyRef:
+              key: POSTGRES_HOST
+              name: api-server-config
+        - name: POSTGRES_PORT
+          valueFrom:
+            configMapKeyRef:
+              key: POSTGRES_PORT
+              name: api-server-config
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              key: POSTGRES_USER
+              name: api-server-secret
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: POSTGRES_PASSWORD
+              name: api-server-secret
+        - name: POSTGRES_DBNAME
+          valueFrom:
+            configMapKeyRef:
+              key: POSTGRES_DBNAME
+              name: api-server-config
+        - name: POSTGRES_SSL_MODE
+          valueFrom:
+            configMapKeyRef:
+              key: POSTGRES_SSL_MODE
+              name: api-server-config
+        - name: KUBERNETES_CLUSTER_DOMAIN
+          value: {{ .Values.kubernetesClusterDomain }}
+        image: {{ .Values.apiServer.image.repository }}:{{ .Values.apiServer.image.tag }}
+        readinessProbe:
+          exec:
+            command: ["/grpc_health_probe", "-addr=:50051"]
+          initialDelaySeconds: 5
+        livenessProbe:
+          exec:
+            command: ["/grpc_health_probe", "-addr=:50051"]
+          initialDelaySeconds: 10
+        name: manager
+        resources: {{- toYaml .Values.apiServer.resources | nindent 10
+          }}
+      terminationGracePeriodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kalypso-observability-hub-api-server
+  labels:
+    app.kubernetes.io/component: api
+    app.kubernetes.io/created-by: kalypso-observability-hub
+    app.kubernetes.io/part-of: kalypso-observability-hub
+    control-plane: api-server
+spec:
+  ports:
+  - name: https
+    port: {{ .Values.apiServer.service.port }}
+    protocol: TCP
+    targetPort: https
+  selector:
+    control-plane: api-server
+  type: {{ .Values.apiServer.service.type }}
