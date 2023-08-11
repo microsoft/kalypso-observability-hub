@@ -1,7 +1,7 @@
 apiServer:
   replicas: 1
   image:
-    repository: ghcr.io/microsoft/kalypso-observability-hub-api-server
+    repository: ghcr.io/microsoft/kalypso-observability-hub-grpc-api-server
     tag: 0.0.1-3
   resources:
     limits:
@@ -18,7 +18,7 @@ apiServer:
   postgresSslmode: disable
   service:
     type: ClusterIP
-    port: 50051
+    grpcPort: 50051
 
 controllerManager:
   kubeRbacProxy:
