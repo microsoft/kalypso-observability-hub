@@ -52,6 +52,7 @@ type DeploymentDescriptorReconciler struct {
 //+kubebuilder:rbac:groups=hub.kalypso.io,resources=deploymentdescriptors,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=hub.kalypso.io,resources=deploymentdescriptors/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=hub.kalypso.io,resources=deploymentdescriptors/finalizers,verbs=update
+//+kubebuilder:rbac:groups=kustomize.toolkit.fluxcd.io,resources=kustomizations,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.

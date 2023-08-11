@@ -4,6 +4,7 @@ ARG TARGETOS
 ARG TARGETARCH
 
 WORKDIR /workspace
+COPY storage/ storage/
 # Copy the Go Modules manifests
 COPY go.mod go.mod
 COPY go.sum go.sum
@@ -15,6 +16,7 @@ RUN go mod download
 COPY main.go main.go
 COPY api/ api/
 COPY controllers/ controllers/
+
 
 # Build
 # the GOARCH has not a default value to allow the binary be built according to the host where the command

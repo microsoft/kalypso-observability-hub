@@ -72,6 +72,12 @@ spec:
         - --leader-elect
         image: controller:latest
         name: manager
+        env:
+        - name: STORAGE_SERVICE_ADDRESS
+          valueFrom:
+            configMapKeyRef:
+              key: STORAGE_SERVICE_ADDRESS
+              name: controller-manager-config
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
@@ -100,3 +106,20 @@ spec:
             memory: 64Mi
       serviceAccountName: controller-manager
       terminationGracePeriodSeconds: 10
+---
+#configmap for controller-manager
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: controller-manager-config
+  namespace: system
+  labels:
+    control-plane: controller-manager
+    app.kubernetes.io/name: configmap
+    app.kubernetes.io/instance: controller-manager
+    app.kubernetes.io/component: manager
+    app.kubernetes.io/created-by: kalypso-observability-hub
+    app.kubernetes.io/part-of: kalypso-observability-hub
+    app.kubernetes.io/managed-by: kustomize
+data:
+  STORAGE_SERVICE_ADDRESS: "kalypso-observability-hub-api-server:50051"
