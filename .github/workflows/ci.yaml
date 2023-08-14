@@ -61,8 +61,8 @@ jobs:
       - name: Build Helm Chart
         run: |
            make helm-build
-           sed -i "s|tag: latest|tag: $VERSION|g" ./helm/values.yaml
-           sed -i "s|tag: latest|tag: $VERSION|g" ./helm/charts/api-server/values.yaml
+           sed -i "s|tag: latest|tag: $VERSION|g" ./helm/kalypso-observability-hub/values.yaml
+           sed -i "s|tag: latest|tag: $VERSION|g" ./helm/kalypso-observability-hub/charts/api-server/values.yaml
 
       - name: Publish Helm chart
         uses: stefanprodan/helm-gh-pages@master
