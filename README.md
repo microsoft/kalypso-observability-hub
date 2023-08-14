@@ -69,6 +69,7 @@ Depending on the host platform and the reconciler implementation, the delivery c
  - Custom agents on the K8s clusters and VMs deliver the deployment state data on top of OpenTelemetry protocol with a setup of Otel Collectors on the host and the observability hub side. This is the most flexible option that addresses challenges with the network hierarchy, restricted connections, semi-connected clusters and multi-cloud systems. It is also a very robust solution which allows to distribute deployment state data across multiple backends without introducing any heavy dependencies. With this approach, the deployment observability hub is just one of backends receiving the deployment state data.
  - Combination of the options above            
 
+
 At this point the observability hub implementation is focused on K8s clusters with Azure Arc GitOps extension installed. The observability hub controller provides out-of-the-box functionality to pull deployment state from the Azure Resource Graph.
 
 The "desired" and the "real" deployment states correlate with each other by the means of commit Id and compose the whole picture of the deployment state.
