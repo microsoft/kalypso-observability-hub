@@ -1,0 +1,21 @@
+apiServer:
+  replicas: 1
+  image:
+    repository: ghcr.io/microsoft/kalypso-observability-hub-grpc-api-server
+    tag: 0.0.1-6
+  resources:
+    limits:
+      cpu: 500m
+      memory: 128Mi
+    requests:
+      cpu: 10m
+      memory: 64Mi
+  postgresHost: postgre-db-svc
+  postgresPort: 5432
+  postgresUser: creator
+  postgresPassword: c67
+  postgresDbName: hub
+  postgresSslmode: disable
+  service:
+    type: ClusterIP
+    grpcPort: 50051

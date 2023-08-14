@@ -336,7 +336,7 @@ func main() {
 	flag.Parse()
 	readConfigValuesFromEnv()
 
-	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", portInt))
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", portInt))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}

@@ -34,6 +34,7 @@ WORKDIR /
 COPY --from=builder /workspace/server .
 COPY --from=builder /bin/grpc_health_probe .
 ENV PORT 50051
+EXPOSE 50051
 
 
 USER 65532:65532
