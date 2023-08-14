@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: postgre-db-config
-  labels:
-  {{- include "postgres.labels" . | nindent 4 }}
-data:
-  db-name: {{ .Values.config.dbName | quote }}
