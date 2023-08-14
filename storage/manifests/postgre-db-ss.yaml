@@ -20,6 +20,8 @@ spec:
         volumeMounts:
            - mountPath: /var/lib/postgresql/data
              name: db      
+           - mountPath: /docker-entrypoint-initdb.d
+             name: init-script
         env:
           - name: POSTGRES_DB
             valueFrom:
@@ -43,6 +45,14 @@ spec:
         ports:
         - containerPort: 5432
           protocol: TCP
+      volumes:
+      - name: init-script
+        configMap:
+          items:
+          - key: init.sql
+            path: init.sql
+          name: postgre-db-init
+
   volumeClaimTemplates:
    - metadata:
        name: db
