@@ -2,8 +2,8 @@ config:
   dbName: hub
 kubernetesClusterDomain: cluster.local
 secret:
-  password: ""
-  username: ""
+  password: "c67"
+  username: "creator"
 svc:
   ports:
   - port: 5432
