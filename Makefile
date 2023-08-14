@@ -123,8 +123,10 @@ undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/confi
 .PHONY: helm-build
 helm-build: manifests kustomize 
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default | helmify -crd-dir $(HELMDIR)
-
+	$(KUSTOMIZE) build config/default | helmify -crd-dir $(HELMDIR)/tmp
+	cp $(HELMDIR)/tmp/crds/* $(HELMDIR)/crds/
+	cp $(HELMDIR)/tmp/templates/* $(HELMDIR)/templates/
+	rm -r $(HELMDIR)/tmp
 
 ##@ Build Dependencies
 

@@ -1,34 +1,34 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: {{ include "helm.fullname" . }}-controller-manager
+  name: {{ include "tmp.fullname" . }}-controller-manager
   labels:
     app.kubernetes.io/component: rbac
     app.kubernetes.io/created-by: kalypso-observability-hub
     app.kubernetes.io/part-of: kalypso-observability-hub
-  {{- include "helm.labels" . | nindent 4 }}
+  {{- include "tmp.labels" . | nindent 4 }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "helm.fullname" . }}-controller-manager
+  name: {{ include "tmp.fullname" . }}-controller-manager
   labels:
     app.kubernetes.io/component: manager
     app.kubernetes.io/created-by: kalypso-observability-hub
     app.kubernetes.io/part-of: kalypso-observability-hub
     control-plane: controller-manager
-  {{- include "helm.labels" . | nindent 4 }}
+  {{- include "tmp.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.controllerManager.replicas }}
   selector:
     matchLabels:
       control-plane: controller-manager
-    {{- include "helm.selectorLabels" . | nindent 6 }}
+    {{- include "tmp.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
         control-plane: controller-manager
-      {{- include "helm.selectorLabels" . | nindent 8 }}
+      {{- include "tmp.selectorLabels" . | nindent 8 }}
       annotations:
         kubectl.kubernetes.io/default-container: manager
     spec:
@@ -82,7 +82,7 @@ spec:
           valueFrom:
             configMapKeyRef:
               key: STORAGE_SERVICE_ADDRESS
-              name: {{ include "helm.fullname" . }}-controller-manager-config
+              name: {{ include "tmp.fullname" . }}-controller-manager-config
         - name: KUBERNETES_CLUSTER_DOMAIN
           value: {{ .Values.kubernetesClusterDomain }}
         image: {{ .Values.controllerManager.manager.image.repository }}:{{ .Values.controllerManager.manager.image.tag
@@ -109,5 +109,5 @@ spec:
             - ALL
       securityContext:
         runAsNonRoot: true
-      serviceAccountName: {{ include "helm.fullname" . }}-controller-manager
+      serviceAccountName: {{ include "tmp.fullname" . }}-controller-manager
       terminationGracePeriodSeconds: 10

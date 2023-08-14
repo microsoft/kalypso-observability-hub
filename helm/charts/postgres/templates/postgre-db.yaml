@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgre-db
+  labels:
+    run: postgre-db
+  {{- include "postgres.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: postgre-db
+  serviceName: postgre-db-svc
+  template:
+    metadata:
+      labels:
+        run: postgre-db
+    spec:
+      containers:
+      - env:
+        - name: POSTGRES_DB
+          valueFrom:
+            configMapKeyRef:
+              key: db-name
+              name: postgre-db-config
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              key: username
+              name: postgre-db-secret
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: password
+              name: postgre-db-secret
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        image: postgres:15.2
+        imagePullPolicy: Always
+        name: postgre-db
+        ports:
+        - containerPort: 5432
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: db
+  volumeClaimTemplates:
+  - metadata:
+      name: db
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 200Mi

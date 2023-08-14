@@ -1,0 +1,11 @@
+config:
+  dbName: hub
+kubernetesClusterDomain: cluster.local
+secret:
+  password: ""
+  username: ""
+svc:
+  ports:
+  - port: 5432
+    targetPort: 5432
+  type: ClusterIP
