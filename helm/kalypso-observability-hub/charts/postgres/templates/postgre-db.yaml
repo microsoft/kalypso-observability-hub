@@ -46,6 +46,11 @@ spec:
           name: db
         - mountPath: /docker-entrypoint-initdb.d
           name: init-script
+        readinessProbe:
+          tcpSocket:
+            port: postgresql
+          initialDelaySeconds: 15
+          timeoutSeconds: 2
 
       volumes:
       - name: init-script

@@ -8,6 +8,5 @@ spec:
   type: {{ .Values.svc.type }}
   selector:
     run: postgre-db
-  {{- include "postgres.selectorLabels" . | nindent 4 }}
   ports:
 	{{- .Values.svc.ports | toYaml | nindent 2 -}}
