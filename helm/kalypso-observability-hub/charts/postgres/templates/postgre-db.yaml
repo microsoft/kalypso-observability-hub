@@ -48,9 +48,10 @@ spec:
           name: init-script
         readinessProbe:
           tcpSocket:
-            port: postgresql
+            port: 5432
           initialDelaySeconds: 15
           timeoutSeconds: 2
+          periodSeconds: 10
 
       volumes:
       - name: init-script
