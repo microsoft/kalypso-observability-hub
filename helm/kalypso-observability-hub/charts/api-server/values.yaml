@@ -1,5 +1,5 @@
 apiServer:
-  replicas: 0
+  replicas: 1
   image:
     repository: ghcr.io/microsoft/kalypso-observability-hub-grpc-api-server
     tag: latest
