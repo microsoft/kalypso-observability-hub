@@ -27,8 +27,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	azidentity "github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	armresourcegraph "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resourcegraph/armresourcegraph"
@@ -360,6 +362,7 @@ func (r *AzureResourceGraphReconciler) manageFailure(ctx context.Context, logger
 func (r *AzureResourceGraphReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&hubv1alpha1.AzureResourceGraph{}).
+		For(&hubv1alpha1.AzureResourceGraph{}, builder.WithPredicates(predicate.GenerationChangedPredicate{})).
+		Owns(&hubv1alpha1.Reconciler{}, builder.WithPredicates(predicate.GenerationChangedPredicate{})).
 		Complete(r)
 }
