@@ -1,0 +1,12 @@
+apiVersion: hub.kalypso.io/v1alpha1
+kind: Reconciler
+metadata:
+  labels:
+    app.kubernetes.io/name: reconciler
+    app.kubernetes.io/instance: reconciler-sample
+    app.kubernetes.io/part-of: kalypso-observability-hub
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: kalypso-observability-hub
+  name: reconciler-sample
+spec:
+  # TODO(user): Add fields here

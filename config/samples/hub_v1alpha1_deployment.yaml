@@ -1,0 +1,12 @@
+apiVersion: hub.kalypso.io/v1alpha1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: deployment
+    app.kubernetes.io/instance: deployment-sample
+    app.kubernetes.io/part-of: kalypso-observability-hub
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: kalypso-observability-hub
+  name: deployment-sample
+spec:
+  # TODO(user): Add fields here
