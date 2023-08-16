@@ -1,0 +1,27 @@
+# permissions for end users to view reconcilers.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: reconciler-viewer-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: kalypso-observability-hub
+    app.kubernetes.io/part-of: kalypso-observability-hub
+    app.kubernetes.io/managed-by: kustomize
+  name: reconciler-viewer-role
+rules:
+- apiGroups:
+  - hub.kalypso.io
+  resources:
+  - reconcilers
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - hub.kalypso.io
+  resources:
+  - reconcilers/status
+  verbs:
+  - get

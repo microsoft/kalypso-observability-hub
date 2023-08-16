@@ -13,4 +13,31 @@ resources:
   kind: DeploymentDescriptor
   path: github.com/microsoft/kalypso-observability-hub/api/v1alpha1
   version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: kalypso.io
+  group: hub
+  kind: AzureResourceGraph
+  path: github.com/microsoft/kalypso-observability-hub/api/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: kalypso.io
+  group: hub
+  kind: Reconciler
+  path: github.com/microsoft/kalypso-observability-hub/api/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: kalypso.io
+  group: hub
+  kind: Deployment
+  path: github.com/microsoft/kalypso-observability-hub/api/v1alpha1
+  version: v1alpha1
 version: "3"
