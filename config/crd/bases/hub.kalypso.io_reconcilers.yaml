@@ -35,6 +35,19 @@ spec:
           spec:
             description: ReconcilerSpec defines the desired state of Reconciler
             properties:
+              deployment:
+                properties:
+                  gitOpsCommitId:
+                    type: string
+                  status:
+                    type: string
+                  statusMessage:
+                    type: string
+                required:
+                - gitOpsCommitId
+                - status
+                - statusMessage
+                type: object
               hostName:
                 type: string
               manifestsEndpoint:

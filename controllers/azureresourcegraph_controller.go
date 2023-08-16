@@ -26,7 +26,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -40,11 +39,6 @@ import (
 type AzureResourceGraphReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
-}
-
-type AzureResourceGraphReconcilerData struct {
-	reconciler hubv1alpha1.ReconcilerSpec
-	deployment hubv1alpha1.DeploymentSpec
 }
 
 //+kubebuilder:rbac:groups=hub.kalypso.io,resources=azureresourcegraphs,verbs=get;list;watch;create;update;patch;delete
@@ -119,15 +113,6 @@ func (r *AzureResourceGraphReconciler) Reconcile(ctx context.Context, req ctrl.R
 		// log the created or updated reconciler
 		reqLogger.Info("=== Created or Updated Reconciler ===")
 		reqLogger.Info(fmt.Sprintf("Created or Updated Reconciler: " + fmt.Sprint(reconciler) + "\n"))
-
-		// Create or update the deployment
-		deployment, err := r.createOrUpdateDeployment(ctx, arg, reconciler, argReconcilerData)
-		if err != nil {
-			return r.manageFailure(ctx, reqLogger, arg, err, "Failed to create or update Deployment")
-		}
-		// log the created or updated deployment
-		reqLogger.Info("=== Created or Updated Deployment ===")
-		reqLogger.Info(fmt.Sprintf("Created or Updated Deployment: " + fmt.Sprint(deployment) + "\n"))
 	}
 
 	condition := metav1.Condition{
@@ -147,12 +132,12 @@ func (r *AzureResourceGraphReconciler) Reconcile(ctx context.Context, req ctrl.R
 }
 
 // Garbage collect reconcilers
-func (r *AzureResourceGraphReconciler) garbageCollectReconcilers(ctx context.Context, arg *hubv1alpha1.AzureResourceGraph, reconcilerList *hubv1alpha1.ReconcilerList, reconcilersData []AzureResourceGraphReconcilerData, logger logr.Logger) error {
+func (r *AzureResourceGraphReconciler) garbageCollectReconcilers(ctx context.Context, arg *hubv1alpha1.AzureResourceGraph, reconcilerList *hubv1alpha1.ReconcilerList, reconcilersData []hubv1alpha1.ReconcilerSpec, logger logr.Logger) error {
 	// iterate over the list of reconcilers and delete the ones that are not in the list of reconcilers from the Azure Resource Graph
 	for _, reconciler := range reconcilerList.Items {
 		found := false
 		for _, argReconciler := range reconcilersData {
-			if argReconciler.reconciler.HostName == reconciler.Spec.HostName && argReconciler.reconciler.ReconcilerName == reconciler.Spec.ReconcilerName {
+			if argReconciler.HostName == reconciler.Spec.HostName && argReconciler.ReconcilerName == reconciler.Spec.ReconcilerName {
 				found = true
 				break
 			}
@@ -172,63 +157,9 @@ func (r *AzureResourceGraphReconciler) garbageCollectReconcilers(ctx context.Con
 	return nil
 }
 
-// Create or Update Deployment
-func (r *AzureResourceGraphReconciler) createOrUpdateDeployment(ctx context.Context, arg *hubv1alpha1.AzureResourceGraph, reconciler *hubv1alpha1.Reconciler, reconcilerData AzureResourceGraphReconcilerData) (*hubv1alpha1.Deployment, error) {
-
-	gitOpsCommitId := strings.Split(reconcilerData.deployment.GitOpsCommitId, ":")[1]
-
-	// construct deploymnt name as a conctanation of the reconciler full name anf the gitOpsCommitId
-
-	deploymentName := fmt.Sprint(reconciler.Name + "-" + gitOpsCommitId)
-
-	// get the deployment and create it of it does not exist
-	deployment := &hubv1alpha1.Deployment{}
-	deploymentExists := true
-	err := r.Get(ctx, types.NamespacedName{Name: deploymentName, Namespace: arg.Namespace}, deployment)
-	if err != nil {
-		ignroredNotFound := client.IgnoreNotFound(err)
-		if ignroredNotFound != nil {
-			return nil, ignroredNotFound
-		}
-		deploymentExists = false
-		// create the deployment
-		deployment = &hubv1alpha1.Deployment{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      deploymentName,
-				Namespace: arg.Namespace,
-				Labels: map[string]string{
-					"azure-resource-graph": arg.Name,
-				},
-			},
-		}
-	}
-
-	deployment.Spec = reconcilerData.deployment
-
-	// set the owner reference to the Reconclier
-	err = ctrl.SetControllerReference(reconciler, deployment, r.Scheme)
-	if err != nil {
-		return nil, err
-	}
-
-	if deploymentExists {
-		err = r.Update(ctx, deployment)
-		if err != nil {
-			return nil, err
-		}
-
-	} else {
-		err = r.Create(ctx, deployment)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return deployment, nil
-}
-
 // Create or Update Reconciler
-func (r *AzureResourceGraphReconciler) createOrUpdateReconciler(ctx context.Context, arg *hubv1alpha1.AzureResourceGraph, reconcilerList *hubv1alpha1.ReconcilerList, reconcilerData AzureResourceGraphReconcilerData) (*hubv1alpha1.Reconciler, error) {
-	reconcilerFullName := fmt.Sprint(reconcilerData.reconciler.HostName + "-" + reconcilerData.reconciler.ReconcilerName)
+func (r *AzureResourceGraphReconciler) createOrUpdateReconciler(ctx context.Context, arg *hubv1alpha1.AzureResourceGraph, reconcilerList *hubv1alpha1.ReconcilerList, reconcilerData hubv1alpha1.ReconcilerSpec) (*hubv1alpha1.Reconciler, error) {
+	reconcilerFullName := fmt.Sprint(reconcilerData.HostName + "-" + reconcilerData.ReconcilerName)
 	found := false
 	var reconciler *hubv1alpha1.Reconciler = nil
 
@@ -249,7 +180,8 @@ func (r *AzureResourceGraphReconciler) createOrUpdateReconciler(ctx context.Cont
 					"azure-resource-graph": arg.Name,
 				},
 			},
-			Spec: reconcilerData.reconciler,
+			Spec:   reconcilerData,
+			Status: hubv1alpha1.ReconcilerStatus{},
 		}
 
 		// set the owner reference to the AzureResourceGraph
@@ -268,13 +200,14 @@ func (r *AzureResourceGraphReconciler) createOrUpdateReconciler(ctx context.Cont
 			return nil, err
 		}
 	}
+
 	return reconciler, nil
 }
 
 // get a list of ReconcilerSpec from the Azure Resource Graph
-func (r *AzureResourceGraphReconciler) getReconcilersData(ctx context.Context, fluxConfigs []interface{}, logger logr.Logger) ([]AzureResourceGraphReconcilerData, error) {
+func (r *AzureResourceGraphReconciler) getReconcilersData(ctx context.Context, fluxConfigs []interface{}, logger logr.Logger) ([]hubv1alpha1.ReconcilerSpec, error) {
 	// Iteraete over the results and create a slice of ReconcilerSpec
-	var reconcilerData []AzureResourceGraphReconcilerData
+	var reconcilerData []hubv1alpha1.ReconcilerSpec
 	for _, fluxConfig := range fluxConfigs {
 		if fluxConfig != nil {
 
@@ -312,6 +245,17 @@ func (r *AzureResourceGraphReconciler) getReconcilersData(ctx context.Context, f
 			// Get the endpoint as repo/branch/path
 			endpoint := repo + "/" + branch + "/" + path
 
+			gitOpsCommitId := propeties["sourceSyncedCommitId"].(string)
+			complianceState := propeties["complianceState"].(string)
+			status := r.translateComplianceState(complianceState)
+			statusMessage := r.getStatusMessage(complianceState, propeties["statuses"].([]interface{}))
+
+			deployment := hubv1alpha1.Deployment{
+				GitOpsCommitId: gitOpsCommitId,
+				Status:         status,
+				StatusMessage:  statusMessage,
+			}
+
 			// Create the reconciler spec
 			reconciler := hubv1alpha1.ReconcilerSpec{
 				HostName:             fmt.Sprintf("%s-%s", resourceGroup, clusterName),
@@ -319,26 +263,10 @@ func (r *AzureResourceGraphReconciler) getReconcilersData(ctx context.Context, f
 				Type:                 "flux",
 				ManifestsStorageType: hubv1alpha1.Git,
 				ManifestsEndpoint:    endpoint,
+				Deployment:           deployment,
 			}
 
-			gitOpsCommitId := propeties["sourceSyncedCommitId"].(string)
-			complianceState := propeties["complianceState"].(string)
-			status := r.translateComplianceState(complianceState)
-			statusMessage := r.getStatusMessage(complianceState, propeties["statuses"].([]interface{}))
-
-			// Create the deployment spec
-			deployment := hubv1alpha1.DeploymentSpec{
-				ReconcilerName: reconcilerName,
-				GitOpsCommitId: gitOpsCommitId,
-				Status:         status,
-				StatusMessage:  statusMessage,
-			}
-
-			// Create the ReconcilerData
-			reconcilerData = append(reconcilerData, AzureResourceGraphReconcilerData{
-				reconciler: reconciler,
-				deployment: deployment,
-			})
+			reconcilerData = append(reconcilerData, reconciler)
 
 		}
 	}

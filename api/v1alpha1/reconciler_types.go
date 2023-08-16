@@ -28,6 +28,20 @@ const (
 	Git ManifestsStorageType = "git"
 )
 
+type DeploymentStatusType string
+
+const (
+	DeploymentStatusPending DeploymentStatusType = "in_progress"
+	DeploymentStatusSuccess DeploymentStatusType = "success"
+	DeploymentStatusFailed  DeploymentStatusType = "failure"
+)
+
+type Deployment struct {
+	GitOpsCommitId string               `json:"gitOpsCommitId"`
+	Status         DeploymentStatusType `json:"status"`
+	StatusMessage  string               `json:"statusMessage"`
+}
+
 // ReconcilerSpec defines the desired state of Reconciler
 type ReconcilerSpec struct {
 	// +required
@@ -44,6 +58,9 @@ type ReconcilerSpec struct {
 
 	// +required
 	ManifestsEndpoint string `json:"manifestsEndpoint"`
+
+	// +optional
+	Deployment Deployment `json:"deployment,omitempty"`
 }
 
 // ReconcilerStatus defines the observed state of Reconciler
