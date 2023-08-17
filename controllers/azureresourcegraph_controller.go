@@ -197,6 +197,7 @@ func (r *AzureResourceGraphReconciler) createOrUpdateReconciler(ctx context.Cont
 			return nil, err
 		}
 	} else {
+		reconciler.Spec = reconcilerData
 		err := r.Update(ctx, reconciler)
 		if err != nil {
 			return nil, err
@@ -247,10 +248,21 @@ func (r *AzureResourceGraphReconciler) getReconcilersData(ctx context.Context, f
 			// Get the endpoint as repo/branch/path
 			endpoint := repo + "/" + branch + "/" + path
 
-			gitOpsCommitId := propeties["sourceSyncedCommitId"].(string)
-			complianceState := propeties["complianceState"].(string)
-			status := r.translateComplianceState(complianceState)
-			statusMessage := r.getStatusMessage(complianceState, propeties["statuses"].([]interface{}))
+			sourceSyncedCommitId := propeties["sourceSyncedCommitId"]
+			gitOpsCommitId := ""
+			if sourceSyncedCommitId != nil {
+				// convert gitopscommitid dev@sha1:c090794d23c4834376d0dbf998889c03b93eb2db to dev/c090794d23c4834376d0dbf998889c03b93eb2db
+				gitOpsCommitId = strings.Replace(sourceSyncedCommitId.(string), "@sha1:", "/", 1)
+			}
+
+			var status hubv1alpha1.DeploymentStatusType
+			statusMessage := ""
+			sourceComplianceState := propeties["complianceState"]
+			if sourceComplianceState != nil {
+				status = r.translateComplianceState(sourceComplianceState.(string))
+				statusMessage = r.getStatusMessage(sourceComplianceState.(string), propeties["statuses"].([]interface{}))
+
+			}
 
 			deployment := hubv1alpha1.Deployment{
 				GitOpsCommitId: gitOpsCommitId,
@@ -367,4 +379,6 @@ func (r *AzureResourceGraphReconciler) SetupWithManager(mgr ctrl.Manager) error 
 		Complete(r)
 }
 
-//TODO: perhaps handle only GitOPs extensions in ARG that correlate with deployment descriptors and ignore the rest
+//TODO:
+// Handle MangedIdentity authentication
+// perhaps handle only GitOPs extensions in ARG that correlate with deployment descriptors and ignore the rest
