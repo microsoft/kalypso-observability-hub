@@ -249,3 +249,8 @@ func (r *DeploymentDescriptorReconciler) SetupWithManager(mgr ctrl.Manager) erro
 		For(&hubv1alpha1.DeploymentDescriptor{}, builder.WithPredicates(predicate.GenerationChangedPredicate{})).
 		Complete(r)
 }
+
+// TODO: condider other storages rather than git
+// Think on : Commi-Id-> hash
+// DeaploymentDescriptor has an optional hash in the manifeats section (if not specified take it from Flux like it is now)
+// Simplify repo/branch/path to just endpoint

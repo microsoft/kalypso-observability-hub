@@ -366,3 +366,5 @@ func (r *AzureResourceGraphReconciler) SetupWithManager(mgr ctrl.Manager) error 
 		Owns(&hubv1alpha1.Reconciler{}, builder.WithPredicates(predicate.GenerationChangedPredicate{})).
 		Complete(r)
 }
+
+//TODO: perhaps handle only GitOPs extensions in ARG that correlate with deployment descriptors and ignore the rest
