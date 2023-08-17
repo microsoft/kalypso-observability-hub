@@ -18,13 +18,21 @@ package controllers
 
 import (
 	"context"
+	"time"
 
+	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
+	"github.com/go-logr/logr"
 	hubv1alpha1 "github.com/microsoft/kalypso-observability-hub/api/v1alpha1"
+	grpcClient "github.com/microsoft/kalypso-observability-hub/storage/api/grpc/client"
+	pb "github.com/microsoft/kalypso-observability-hub/storage/api/grpc/proto"
 )
 
 // ReconcilerReconciler reconciles a Reconciler object
@@ -47,16 +55,105 @@ type ReconcilerReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.1/pkg/reconcile
 func (r *ReconcilerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	reqLogger := log.FromContext(ctx)
+	reqLogger.Info("=== Reconciling Reconciler  ===")
 
-	// TODO(user): your logic here
+	// Fetch the Reconciler instance
+	reconciler := &hubv1alpha1.Reconciler{}
+	err := r.Get(ctx, req.NamespacedName, reconciler)
+	if err != nil {
+		ignroredNotFound := client.IgnoreNotFound(err)
+		if ignroredNotFound != nil {
+			reqLogger.Error(err, "Failed to get Azure Resource Graph")
+		}
+		return ctrl.Result{}, ignroredNotFound
+	}
+
+	// Check if the resource is being deleted
+	if !reconciler.ObjectMeta.DeletionTimestamp.IsZero() {
+		return ctrl.Result{}, nil
+	}
+
+	storageClient, err := grpcClient.GetObservabilityStorageGrpcClient()
+	if err != nil {
+		return r.manageFailure(ctx, reqLogger, reconciler, err, "Failed to get storage client")
+	}
+
+	// Update Host
+	host, err := storageClient.UpdateHost(ctx, &pb.Host{
+		Name:        reconciler.Spec.HostName,
+		Description: reconciler.Spec.HostName,
+	})
+	if err != nil {
+		return r.manageFailure(ctx, reqLogger, reconciler, err, "Failed to update host")
+	}
+
+	// Update Reconciler
+	rc, err := storageClient.UpdateReconciler(ctx, &pb.Reconciler{
+		HostId:               host.Id,
+		Name:                 reconciler.Spec.ReconcilerName,
+		Description:          reconciler.Spec.ReconcilerName,
+		ReconcilerType:       reconciler.Spec.Type,
+		ManifestsStorageType: (string)(reconciler.Spec.ManifestsStorageType),
+		ManifestsEndpoint:    reconciler.Spec.ManifestsEndpoint,
+	})
+	if err != nil {
+		return r.manageFailure(ctx, reqLogger, reconciler, err, "Failed to update reconciler")
+	}
+
+	// Update Deployment
+	reconcilerDeployment := reconciler.Spec.Deployment
+	_, err = storageClient.UpdateDeployment(ctx, &pb.Deployment{
+		ReconcilerId:   rc.Id,
+		GitopsCommitId: reconcilerDeployment.GitOpsCommitId,
+		Status:         (string)(reconcilerDeployment.Status),
+		StatusMessage:  reconcilerDeployment.StatusMessage,
+	})
+	if err != nil {
+		return r.manageFailure(ctx, reqLogger, reconciler, err, "Failed to update deployment")
+	}
+
+	condition := metav1.Condition{
+		Type:   "Ready",
+		Status: metav1.ConditionTrue,
+		Reason: "Succeeded",
+	}
+	meta.SetStatusCondition(&reconciler.Status.Conditions, condition)
+
+	updateErr := r.Status().Update(ctx, reconciler)
+	if updateErr != nil {
+		reqLogger.Info("Error when updating status.")
+		return ctrl.Result{RequeueAfter: time.Second * 3}, updateErr
+	}
 
 	return ctrl.Result{}, nil
+}
+
+// Gracefully handle errors
+func (r *ReconcilerReconciler) manageFailure(ctx context.Context, logger logr.Logger, reconciler *hubv1alpha1.Reconciler, err error, message string) (ctrl.Result, error) {
+	logger.Error(err, message)
+
+	//crerate a condition
+	condition := metav1.Condition{
+		Type:    "Ready",
+		Status:  metav1.ConditionFalse,
+		Reason:  "UpdateFailed",
+		Message: err.Error(),
+	}
+
+	meta.SetStatusCondition(&reconciler.Status.Conditions, condition)
+
+	updateErr := r.Status().Update(ctx, reconciler)
+	if updateErr != nil {
+		logger.Info("Error when updating status. Requeued")
+		return ctrl.Result{RequeueAfter: time.Second * 3}, updateErr
+	}
+	return ctrl.Result{}, err
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *ReconcilerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&hubv1alpha1.Reconciler{}).
+		For(&hubv1alpha1.Reconciler{}, builder.WithPredicates(predicate.GenerationChangedPredicate{})).
 		Complete(r)
 }

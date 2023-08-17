@@ -8,6 +8,32 @@ rules:
 - apiGroups:
   - hub.kalypso.io
   resources:
+  - azureresourcegraphs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - hub.kalypso.io
+  resources:
+  - azureresourcegraphs/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - hub.kalypso.io
+  resources:
+  - azureresourcegraphs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - hub.kalypso.io
+  resources:
   - deploymentdescriptors
   verbs:
   - create
@@ -27,6 +53,32 @@ rules:
   - hub.kalypso.io
   resources:
   - deploymentdescriptors/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - hub.kalypso.io
+  resources:
+  - reconcilers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - hub.kalypso.io
+  resources:
+  - reconcilers/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - hub.kalypso.io
+  resources:
+  - reconcilers/status
   verbs:
   - get
   - patch
