@@ -37,12 +37,19 @@ spec:
             properties:
               interval:
                 type: string
+              managedIdentity:
+                minLength: 0
+                type: string
               subscription:
+                minLength: 0
+                type: string
+              tenant:
                 minLength: 0
                 type: string
             required:
             - interval
             - subscription
+            - tenant
             type: object
           status:
             description: AzureResourceGraphStatus defines the observed state of AzureResourceGraph

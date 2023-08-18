@@ -9,5 +9,10 @@ metadata:
     app.kubernetes.io/created-by: kalypso-observability-hub
   name: azureresourcegraph-sample
 spec:
-  subscription: 7be1b9e7-57ca-47ff-b5ab-82e7ccb8c611
+  subscription: "7be1b9e7-57ca-47ff-b5ab-82e7ccb8c611"
+  
+  tenant: "16b3c013-d300-468d-ac64-7eda0820b6d3"
+  
+  managedIdentity: "02552706-98f9-4301-a473-017752fc430b"
+  
   interval: 10s
