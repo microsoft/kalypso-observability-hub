@@ -29,6 +29,14 @@ type AzureResourceGraphSpec struct {
 	// +required
 	Subscription string `json:"subscription"`
 
+	//+kubebuilder:validation:MinLength=0
+	// +required
+	Tenant string `json:"tenant"`
+
+	//+kubebuilder:validation:MinLength=0
+	// +optional
+	ManagedIdentiy string `json:"managedIdentity"`
+
 	// +required
 	Interval metav1.Duration `json:"interval"`
 }

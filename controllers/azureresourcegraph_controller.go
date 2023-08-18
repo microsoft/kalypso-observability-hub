@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -76,7 +77,7 @@ func (r *AzureResourceGraphReconciler) Reconcile(ctx context.Context, req ctrl.R
 		return ctrl.Result{}, nil
 	}
 
-	argClient, err := r.getARGClient()
+	argClient, err := r.getARGClient(arg)
 	if err != nil {
 		return r.manageFailure(ctx, reqLogger, arg, err, "Failed to get Azure Resource Graph client")
 	}
@@ -87,6 +88,10 @@ func (r *AzureResourceGraphReconciler) Reconcile(ctx context.Context, req ctrl.R
 	}
 
 	reconcilersData, err := r.getReconcilersData(ctx, fluxConfigs.Data.([]interface{}), reqLogger)
+	if err != nil {
+		return r.manageFailure(ctx, reqLogger, arg, err, "Failed to get Reconcilers Data")
+	}
+
 	//log the reconcilers
 	reqLogger.Info("=== Reconcilers ===")
 	reqLogger.Info(fmt.Sprintf("Reconcilers: " + fmt.Sprint(reconcilersData) + "\n"))
@@ -316,7 +321,10 @@ func (r *AzureResourceGraphReconciler) getStatusMessage(complianceState string, 
 }
 
 // Get ARG client
-func (r *AzureResourceGraphReconciler) getARGClient() (*armresourcegraph.Client, error) {
+func (r *AzureResourceGraphReconciler) getARGClient(arg *hubv1alpha1.AzureResourceGraph) (*armresourcegraph.Client, error) {
+	os.Setenv("AZURE_TENANT_ID", arg.Spec.Tenant)
+	os.Setenv("AZURE_CLIENT_ID", arg.Spec.ManagedIdentiy)
+
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
 		return nil, err
@@ -380,5 +388,4 @@ func (r *AzureResourceGraphReconciler) SetupWithManager(mgr ctrl.Manager) error 
 }
 
 //TODO:
-// Handle MangedIdentity authentication
 // perhaps handle only GitOPs extensions in ARG that correlate with deployment descriptors and ignore the rest
