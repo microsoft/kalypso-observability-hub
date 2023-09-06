@@ -17,7 +17,7 @@ The challenges, mentioned above, can be addressed, to some extent, if Platform a
 
 ![DeploymentObservabilityDashboard](./docs/images/DeploymentObservabilityDashboard.png)
 
-![ClusterStateDashboard](./docs/images/ClustertStateDashboard.png)
+![ClusterStateDashboard](./docs/images/ClusterStateDashboard.png)
 
 ![EnvironmentStateDashboard](./docs/images/EnvironmentStateDashboard.png)
 
