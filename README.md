@@ -13,7 +13,15 @@ Platform and Application Dev teams need a deployment observability solution to p
 
 ## Deployment reports
 
-The challenges, mentioned above, can be addressed, to some extent, if Platform and Application Dev teams have dashboards and alerts that provide information as in [these mockup examples](./docs/images/DeploymentObservabilityReports.png).
+The challenges, mentioned above, can be addressed, to some extent, if Platform and Application Dev teams have dashboards and alerts that provide information as in the following reports:
+
+![DeploymentObservabilityDashboard](./docs/images/DeploymentObservabilityDashboard.png)
+
+![ClusterStateDashboard](./docs/images/ClusterStateDashboard.png)
+
+![EnvironmentStateDashboard](./docs/images/EnvironmentStateDashboard.png)
+
+See the the [mockup examples](./docs/images/DeploymentObservabilityReports.png) backing up these reports.
 
 ## Architecture
 

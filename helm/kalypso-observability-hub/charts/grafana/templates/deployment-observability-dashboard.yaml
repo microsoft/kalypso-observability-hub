@@ -530,6 +530,102 @@ data:
                       "value": 191
                     }
                   ]
+                },
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "Dev Successful"
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.width",
+                      "value": 134
+                    }
+                  ]
+                },
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "Dev Deployed"
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.width",
+                      "value": 123
+                    }
+                  ]
+                },
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "Deployment Target"
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.width",
+                      "value": 160
+                    }
+                  ]
+                },
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "Dev Scheduled"
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.width",
+                      "value": 134
+                    }
+                  ]
+                },
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "Dev Clusters"
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.width",
+                      "value": 117
+                    }
+                  ]
+                },
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "Stage Scheduled"
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.width",
+                      "value": 145
+                    }
+                  ]
+                },
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "Stage Deployed"
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.width",
+                      "value": 138
+                    }
+                  ]
+                },
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "Stage Clusters"
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.width",
+                      "value": 130
+                    }
+                  ]
                 }
               ]
             },
@@ -549,12 +645,7 @@ data:
                 "show": false
               },
               "showHeader": true,
-              "sortBy": [
-                {
-                  "desc": false,
-                  "displayName": "T2 Successful"
-                }
-              ]
+              "sortBy": []
             },
             "pluginVersion": "9.1.0",
             "targets": [
@@ -567,7 +658,7 @@ data:
                 "group": [],
                 "metricColumn": "none",
                 "rawQuery": true,
-                "rawSql": "select dt.name deployment_target_name,       \n       wk.name workspace_name,\n       a.name application_name, \n       w.name workload_name,\n       max(case e.name\n        when 'dev' THEN wv.version\n        else null\n       end) dev_workload_version,\n       max(case e.name\n        when 'dev' THEN deployments.deployed_workload_version\n        else null\n       end) dev_deployed_workload_version,\n       max(case e.name\n        when 'dev' THEN successfull_reconcilers\n        else null\n       end) dev_successfull_reconcilers,\n       max(case e.name\n        when 'dev' THEN reconcilers\n        else null\n       end) dev_reconcilers,       \n       max(case e.name\n        when 'dev' THEN wv.version\n        else null\n       end) d2_workload_version,\n       max(case e.name\n        when 'd2' THEN deployments.deployed_workload_version\n        else null\n       end) d2_deployed_workload_version,\n       max(case e.name\n        when 'd2' THEN successfull_reconcilers\n        else null\n       end) d2_successfull_reconcilers,\n       max(case e.name\n        when 'd2' THEN reconcilers\n        else null\n       end) d2_reconcilers,\n\n       max(case e.name\n        when 'd4' THEN wv.version\n        else null\n       end) d4_workload_version,\n       max(case e.name\n        when 'd4' THEN deployments.deployed_workload_version\n        else null\n       end) d4_deployed_workload_version,\n       max(case e.name\n        when 'd4' THEN successfull_reconcilers\n        else null\n       end) d4_successfull_reconcilers,\n       max(case e.name\n        when 'd4' THEN reconcilers\n        else null\n       end) d4_reconcilers,\n\n       max(case e.name\n        when 't2' THEN wv.version\n        else null\n       end) t2_workload_version,\n       max(case e.name\n        when 't2' THEN deployments.deployed_workload_version\n        else null\n       end) t2_deployed_workload_version,\n       max(case e.name\n        when 't2' THEN successfull_reconcilers\n        else null\n       end) t2_successfull_reconcilers,\n       max(case e.name\n        when 't2' THEN reconcilers\n        else null\n       end) t2_reconcilers       \n\nfrom deployment_target dt\n     left outer join (select dt.id deployment_target_id, depl.deployed_workload_version, \n                        sum(\n                        case depl.status\n                            when 'success' THEN 1\n                            else 0\n                        end\n                     ) successfull_reconcilers,\n                     count(1) reconcilers\n     from reconciler r\n          left outer join (select d.reconciler_id, d.status, wv.version deployed_workload_version\n            from deployment d,\n                deployment_assignment da,\n                workload_version wv,\n                deployment_target dt,\n                reconciler r\n            where d.gitops_commit_id = da.gitops_commit_id \n                and da.workload_version_id = wv.id  \n                and d.reconciler_id = r.id\n                and da.deployment_target_id = dt.id\n                and r.manifests_endpoint = dt.manifests_endpoint\n                and d.created_on = (select max(created_on) from deployment where reconciler_id = d.reconciler_id)          \n          ) depl on r.id = depl.reconciler_id,\n          deployment_target dt\n     where r.manifests_storage_type = dt.manifests_storage_type\n          and r.manifests_endpoint = dt.manifests_endpoint\n    group by deployment_target_id, deployed_workload_version) deployments on dt.id = deployments.deployment_target_id,    \n     deployment_assignment da,\n     workload_version wv,\n     workload w,\n     application a,\n     workspace wk,\n     environment e\nwhere dt.id = da.deployment_target_id\n    and da.workload_version_id = wv.id\n    and wv.workload_id = w.id\n    and w.application_id = a.id\n    and a.workspace_id = wk.id\n    and dt.environment_id = e.id    \n    and da.created_on = (select max(created_on) from deployment_assignment where deployment_target_id = dt.id)\ngroup by  deployment_target_name,\n       workspace_name,\n       application_name, \n       workload_name    ",
+                "rawSql": "select dt.name deployment_target_name,       \n       wk.name workspace_name,\n       a.name application_name, \n       w.name workload_name,\n       max(case e.name\n        when 'dev' THEN wv.version\n        else null\n       end) dev_workload_version,\n       max(case e.name\n        when 'dev' THEN deployments.deployed_workload_version\n        else null\n       end) dev_deployed_workload_version,\n       max(case e.name\n        when 'dev' THEN successfull_reconcilers\n        else null\n       end) dev_successfull_reconcilers,\n       max(case e.name\n        when 'dev' THEN reconcilers\n        else null\n       end) dev_reconcilers,       \n       max(case e.name\n        when 'stage' THEN wv.version\n        else null\n       end) stage_workload_version,\n       max(case e.name\n        when 'stage' THEN deployments.deployed_workload_version\n        else null\n       end) stage_deployed_workload_version,\n       max(case e.name\n        when 'stage' THEN successfull_reconcilers\n        else null\n       end) stage_successfull_reconcilers,\n       max(case e.name\n        when 'stage' THEN reconcilers\n        else null\n       end) stage_reconcilers,\n\n       max(case e.name\n        when 'prod' THEN wv.version\n        else null\n       end) prod_workload_version,\n       max(case e.name\n        when 'prod' THEN deployments.deployed_workload_version\n        else null\n       end) prod_deployed_workload_version,\n       max(case e.name\n        when 'prod' THEN successfull_reconcilers\n        else null\n       end) prod_successfull_reconcilers,\n       max(case e.name\n        when 'prod' THEN reconcilers\n        else null\n       end) prod_reconcilers\nfrom deployment_target dt\n     left outer join (select dt.id deployment_target_id, depl.deployed_workload_version, \n                        sum(\n                        case depl.status\n                            when 'success' THEN 1\n                            else 0\n                        end\n                     ) successfull_reconcilers,\n                     count(1) reconcilers\n     from reconciler r\n          left outer join (select d.reconciler_id, d.status, wv.version deployed_workload_version\n            from deployment d,\n                deployment_assignment da,\n                workload_version wv,\n                deployment_target dt,\n                reconciler r\n            where d.gitops_commit_id = da.gitops_commit_id \n                and da.workload_version_id = wv.id  \n                and d.reconciler_id = r.id\n                and da.deployment_target_id = dt.id\n                and r.manifests_endpoint = dt.manifests_endpoint\n                and d.created_on = (select max(created_on) from deployment where reconciler_id = d.reconciler_id)          \n          ) depl on r.id = depl.reconciler_id,\n          deployment_target dt\n     where r.manifests_storage_type = dt.manifests_storage_type\n          and r.manifests_endpoint = dt.manifests_endpoint\n    group by deployment_target_id, deployed_workload_version) deployments on dt.id = deployments.deployment_target_id,    \n     deployment_assignment da,\n     workload_version wv,\n     workload w,\n     application a,\n     workspace wk,\n     environment e\nwhere dt.id = da.deployment_target_id\n    and da.workload_version_id = wv.id\n    and wv.workload_id = w.id\n    and w.application_id = a.id\n    and a.workspace_id = wk.id\n    and dt.environment_id = e.id    \n    and da.created_on = (select max(created_on) from deployment_assignment where deployment_target_id = dt.id)\ngroup by  deployment_target_name,\n       workspace_name,\n       application_name, \n       workload_name    ",
                 "refId": "A",
                 "select": [
                   [
@@ -599,20 +690,19 @@ data:
                   },
                   "indexByName": {
                     "application_name": 1,
-                    "deployment_target_id": 4,
                     "deployment_target_name": 3,
-                    "dev_deployed_workload_version": 6,
-                    "dev_reconcilers": 8,
-                    "dev_successfull_reconcilers": 7,
-                    "dev_workload_version": 5,
-                    "prod_deployed_workload_version": 14,
-                    "prod_reconcilers": 16,
-                    "prod_successfull_reconcilers": 15,
-                    "prod_workload_version": 13,
-                    "qa_deployed_workload_version": 10,
-                    "qa_reconcilers": 12,
-                    "qa_successfull_reconcilers": 11,
-                    "qa_workload_version": 9,
+                    "dev_deployed_workload_version": 5,
+                    "dev_reconcilers": 7,
+                    "dev_successfull_reconcilers": 6,
+                    "dev_workload_version": 4,
+                    "prod_deployed_workload_version": 13,
+                    "prod_reconcilers": 15,
+                    "prod_successfull_reconcilers": 14,
+                    "prod_workload_version": 12,
+                    "stage_deployed_workload_version": 9,
+                    "stage_reconcilers": 11,
+                    "stage_successfull_reconcilers": 10,
+                    "stage_workload_version": 8,
                     "workload_name": 2,
                     "workspace_name": 0
                   },
@@ -632,6 +722,14 @@ data:
                     "dev_reconcilers": "Dev Clusters",
                     "dev_successfull_reconcilers": "Dev Successful",
                     "dev_workload_version": "Dev Scheduled",
+                    "prod_deployed_workload_version": "Prod Deployed",
+                    "prod_reconcilers": "Prod Clusters",
+                    "prod_successfull_reconcilers": "Prod Successful",
+                    "prod_workload_version": "Prod Scheduled",
+                    "stage_deployed_workload_version": "Stage Deployed",
+                    "stage_reconcilers": "Stage Clusters",
+                    "stage_successfull_reconcilers": "Stage Successful",
+                    "stage_workload_version": "Stage Scheduled",
                     "t2_deployed_workload_version": "T2 Deployed",
                     "t2_reconcilers": "T2 clusters",
                     "t2_successfull_reconcilers": "T2 Successful",
@@ -663,3 +761,4 @@ data:
         "version": 1,
         "weekStart": ""
       }
+      
