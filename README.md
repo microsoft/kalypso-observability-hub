@@ -21,7 +21,7 @@ The challenges, mentioned above, can be addressed, to some extent, if Platform a
 
 ![EnvironmentStateDashboard](./docs/images/EnvironmentStateDashboard.png)
 
-See the the [mockup examples](./docs/images/DeploymentObservabilityReports.png) backing these reports.
+See the the [mockup examples](./docs/images/DeploymentObservabilityReports.png) backing up these reports.
 
 ## Architecture
 
