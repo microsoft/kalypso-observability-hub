@@ -76,7 +76,9 @@ The "desired" and the "real" deployment states correlate with each other by the 
 
 ## Observability hub abstractions
 
-### Deployment Descriptor
+### Deployment descriptor
+
+Deployment descriptors are submitted to the application GitOps repository by the CI/CD process along with the deployment manifests. These descriptors are delivered to the observability hub K8s cluster by Flux. Observability hub controller watches deployment descriptors and submits their data to the observability storage.
   
 #### Example
 
@@ -110,17 +112,58 @@ spec:
     buildTime: "2023-04-27T23:25:05Z"
 ```
 
-### Cluster
+### Reconciler
+
+Reconciler custom resource contains information about the host, reconciler type, manifests endpoint, commit and deployment state. This resource is watched buy the observability hub controller which submits its data to the observability hub storage. The Reconciler resource can be created on the observability hub clusters in a number of different ways. Refer to the [Real deployment state](#real-deployment-state) section for the possible options.  
 
 #### Example
 
-### Deployment
+```yaml
+apiVersion: hub.kalypso.io/v1alpha1
+kind: Reconciler
+metadata:
+  name: kalypso-rg-flux-hello-world
+spec:
+  hostName: kalypso-rg-flux
+  type: flux
+  manifestsEndpoint: https://github.com/kaizentm/kalypso-gitops/dev/drone
+  manifestsStorageType: git  
+  deployment:
+    gitOpsCommitId: dev/5ce065315cc1702b6cb4eb9d3f804413706570d8
+    status: success
+    statusMessage: |
+      Resource is Ready
+```
+
+### ARG
+
+In order to have the observability hub poll Azure Resource Graph, a corresponding custom resource should be created in the observability hub cluster. This resource contains information about what tenant and subscription should be queried and what managed identity should be used for the authentication, assuming the managed identity is enabled on the observability hub cluster. 
+
+There might be multiple ARG resources on the cluster for the use cases when different environments are hosted in different subscriptions or even tenants.
+
+The observability hub controller polls ARG and creates [Reconciler](#reconciler) custom resources with the information about the host and deployment state.
 
 #### Example
+
+```yaml
+apiVersion: hub.kalypso.io/v1alpha1
+kind: AzureResourceGraph
+metadata:
+  name: azureresourcegraph-sample
+spec:
+  subscription: "7be1b9e7-57ca-47ff-b5ab-82e7ccb8c611"
+  tenant: "16b3c013-d300-468d-ac64-7eda0820b6d3"  
+  managedIdentity: "02552706-98f9-4301-a473-017752fc430b"
+  interval: 10s
+```  
+
 
 ## Observability hub API
+ 
+ TBD
 
 ## Installation
+ TBD
 
 ## Contributing
 
