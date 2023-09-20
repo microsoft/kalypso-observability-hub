@@ -13,7 +13,7 @@ controllerManager:
   manager:
     image:
       repository: ghcr.io/microsoft/kalypso-observability-hub-controller-manager
-      tag: latest
+      tag: 1.0.0
     resources:
       limits:
         cpu: 500m
