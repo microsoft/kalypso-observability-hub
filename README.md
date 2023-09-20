@@ -171,7 +171,8 @@ spec:
  TBD
 
 ## Installation
- TBD
+ 
+Refer to the [Installation guide](./docs/installation.md) to install Kalypso Observability Hub.
 
 ## Contributing
 

@@ -11,10 +11,10 @@ Install Kalypso Observability Hub (KOH) with the following Helm commands:
 
 ```sh
 helm repo add kalypso-observability-hub https://raw.githubusercontent.com/microsoft/kalypso-observability-hub/gh-pages/ --force-update 
-helm upgrade -i kalypso-observability-hub ./helm/kalypso-observability-hub -n hub
+helm upgrade -i kalypso-observability-hub kalypso-observability-hub/kalypso-observability-hub  --create-namespace  -n hub 
 ```
 
-It installs the following components on your k8s cluster:
+It installs the following components on your k8s cluster in the `hub` namespace:
 
 - Postgres Database
 - KOH Storage API 
@@ -23,7 +23,14 @@ It installs the following components on your k8s cluster:
 
 You can check that the installed components are up and running:
 ```sh
- kubectl ....
+ kubectl get pods -n hub
+
+---
+NAME                                                            READY   STATUS    RESTARTS   AGE
+kalypso-observability-hub-api-server-56bf784d79-zcrl7           1/1     Running   0          70s
+kalypso-observability-hub-controller-manager-6fc48bc875-s9bqt   2/2     Running   0          70s
+grafana-6854d5b49c-f86x4                                        2/2     Running   0          70s
+postgre-db-0                                                    1/1     Running   0          70s
 ```  
 
 ## Configuring
@@ -40,6 +47,7 @@ Create Flux resources to fetch deployment descriptors from a GitOps repository:
 
 ```sh
 kubectl apply -f - <<EOF
+apiVersion: source.toolkit.fluxcd.io/v1beta2
 kind: GitRepository
 metadata:
   name: deployment-descriptors-sample
@@ -98,4 +106,3 @@ By default, the [Helm chart](#installation) installs Grafana with the [preconfig
 kubectl port-forward svc/grafana 3000:3000 -n hub
 ```
 and go to the http://localhost:3000 with your browser.
-
