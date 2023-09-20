@@ -1,6 +1,6 @@
 # Installation guide
 
-## Prerequisites 
+## Prerequisites
 
 - A k8s cluster
 - Helm
@@ -17,11 +17,12 @@ helm upgrade -i kalypso-observability-hub kalypso-observability-hub/kalypso-obse
 It installs the following components on your k8s cluster in the `hub` namespace:
 
 - Postgres Database
-- KOH Storage API 
+- KOH Storage API
 - KOH Controller Manager
 - Grafana. *Note*, that Grafana component is optional. To omit it add `grafana.enabled` option to the Helm `upgrade` command.
 
 You can check that the installed components are up and running:
+
 ```sh
  kubectl get pods -n hub
 
@@ -35,13 +36,13 @@ postgre-db-0                                                    1/1     Running 
 
 ## Configuring
 
-Kalypso Observability Hub consumes two types of data: Deployment Descriptors and Reconciler statuses. Normally, these entities are coming from different sources, which should be configured differently, 
+Kalypso Observability Hub consumes two types of data: Deployment Descriptors and Reconciler statuses. Normally, these entities are coming from different sources, which should be configured differently,
 
 ### Deployment Descriptors
 
-Although, [Deployment Descriptors](../README.md#deployment-descriptor) can be pushed to the KOH cluster simply with a `kubectl` command, normally, they are delivered to the cluster in the pull based GitOps fashion with an operator like Flux. 
+Although, [Deployment Descriptors](../README.md#deployment-descriptor) can be pushed to the KOH cluster simply with a `kubectl` command, normally, they are delivered to the cluster in the pull based GitOps fashion with an operator like Flux.
 
-Make sure you have Flux installed on the KOH cluster either with any preferable [native Flux methods](https://fluxcd.io/flux/installation/) or with the [Azure Arc GitOps extension](https://learn.microsoft.com/en-us/azure/azure-arc/kubernetes/tutorial-use-gitops-flux2?tabs=azure-cli).    
+Make sure you have Flux installed on the KOH cluster either with any preferable [native Flux methods](https://fluxcd.io/flux/installation/) or with the [Azure Arc GitOps extension](https://learn.microsoft.com/en-us/azure/azure-arc/kubernetes/tutorial-use-gitops-flux2?tabs=azure-cli).
 
 Create Flux resources to fetch deployment descriptors from a GitOps repository:
 
@@ -74,11 +75,11 @@ spec:
 EOF
 ```
 
-*Note*, if you're using Azure Arc GitOps extension, you can create a configuration above with an [az cli command](https://learn.microsoft.com/en-us/azure/azure-arc/kubernetes/tutorial-use-gitops-flux2?tabs=azure-cli#apply-a-flux-configuration). 
+*Note*, if you're using Azure Arc GitOps extension, you can create a configuration above with an [az cli command](https://learn.microsoft.com/en-us/azure/azure-arc/kubernetes/tutorial-use-gitops-flux2?tabs=azure-cli#apply-a-flux-configuration).
 
 ### Reconcilers
 
-[Reconcilers](../README.md#reconciler) can be pushed to the KOH cluster by the workload hosts directly. However, if your workload k8s clusters deploy applications with [Azure Arc GitOps extension](https://learn.microsoft.com/en-us/azure/azure-arc/kubernetes/tutorial-use-gitops-flux2?tabs=azure-cli), they already report the deployment state to Azure Resource Graph (ARG). 
+[Reconcilers](../README.md#reconciler) can be pushed to the KOH cluster by the workload hosts directly. However, if your workload k8s clusters deploy applications with [Azure Arc GitOps extension](https://learn.microsoft.com/en-us/azure/azure-arc/kubernetes/tutorial-use-gitops-flux2?tabs=azure-cli), they already report the deployment state to Azure Resource Graph (ARG).
 
 Kalypso Observability Hub has a built in controller to monitor Azure Resource Graph for the deployment state updates. This controller polls ARG and creates [Reconciler](../README.md#reconciler) resources in the KOH cluster automatically. The ARG controller uses a managed identity to authenticate with Azure Resource Graph, so make sure the KOH cluster is configured with a [managed identity](https://learn.microsoft.com/en-us/azure/aks/use-managed-identity).
 
@@ -105,4 +106,5 @@ By default, the [Helm chart](#installation) installs Grafana with the [preconfig
 ```sh
 kubectl port-forward svc/grafana 3000:3000 -n hub
 ```
-and go to the http://localhost:3000 with your browser.
+
+and go to the <http://localhost:3000> with your browser.
