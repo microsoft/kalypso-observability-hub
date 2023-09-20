@@ -2,6 +2,27 @@ apiVersion: v1
 entries:
   kalypso-observability-hub:
   - apiVersion: v2
+    appVersion: 1.0.1-alpha
+    created: "2023-09-20T23:06:50.392915918Z"
+    dependencies:
+    - name: api-server
+      repository: ""
+      version: 1.0.1-alpha
+    - name: postgres
+      repository: ""
+      version: 0.1.0
+    - condition: grafana.enabled
+      name: grafana
+      repository: ""
+      version: 1.0.0
+    description: A Helm chart for Kubernetes
+    digest: 006ade15b91096d2988e54f33d30fc41942765d61b1620c784950b0cb546e8e0
+    name: kalypso-observability-hub
+    type: application
+    urls:
+    - kalypso-observability-hub-1.0.1-alpha.tgz
+    version: 1.0.1-alpha
+  - apiVersion: v2
     appVersion: 1.0.0
     created: "2023-09-20T22:59:01.14486229Z"
     dependencies:
@@ -43,4 +64,4 @@ entries:
     urls:
     - kalypso-observability-hub-0.0.1.tgz
     version: 0.0.1
-generated: "2023-09-20T22:59:01.142883798Z"
+generated: "2023-09-20T23:06:50.390405478Z"
