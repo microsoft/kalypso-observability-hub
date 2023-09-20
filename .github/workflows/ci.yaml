@@ -9,7 +9,6 @@ env:
   VERSION: ${{ vars.MAJOR_VERSION }}.${{ vars.MINOR_VERSION }}.${{ vars.HF_VERSION }}-${{ github.run_number }}
 
 jobs:
-jobs:
   quality-check:
     uses: ./.github/workflows/pr.yaml
     
