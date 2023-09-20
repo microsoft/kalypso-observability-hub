@@ -36,3 +36,6 @@ metricsService:
 grafana:
   enabled: true
 
+flux:
+  enabled: false
+
