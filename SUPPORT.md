@@ -8,7 +8,6 @@ feature request as a new Issue.
 
 For help and questions about using this project, please add a new [GitHub Discussion](https://github.com/microsoft/kalypso/discussions).
 
-
 ## Microsoft Support Policy  
 
 Support for this project is limited to the resources listed above.
