@@ -80,3 +80,6 @@ onboarded
 commitid
 lifecycles
 Kustomization
+datasource
+kaizentm
+azureresourcegraph
