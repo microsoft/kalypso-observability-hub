@@ -254,11 +254,12 @@ func (r *AzureResourceGraphReconciler) getReconcilersData(ctx context.Context, f
 			endpoint := repo + "/" + branch + "/" + path
 
 			sourceSyncedCommitId := propeties["sourceSyncedCommitId"]
-			gitOpsCommitId := ""
-			if sourceSyncedCommitId != nil {
-				// convert gitopscommitid dev@sha1:c090794d23c4834376d0dbf998889c03b93eb2db to dev/c090794d23c4834376d0dbf998889c03b93eb2db
-				gitOpsCommitId = strings.Replace(sourceSyncedCommitId.(string), "@sha1:", "/", 1)
-			}
+			// gitOpsCommitId := ""
+			// if sourceSyncedCommitId != nil {
+			// 	// convert gitopscommitid dev@sha1:c090794d23c4834376d0dbf998889c03b93eb2db to dev/c090794d23c4834376d0dbf998889c03b93eb2db
+			// 	gitOpsCommitId = strings.Replace(sourceSyncedCommitId.(string), "@sha1:", "/", 1)
+			// }
+			gitOpsCommitId := sourceSyncedCommitId.(string)
 
 			var status hubv1alpha1.DeploymentStatusType
 			statusMessage := ""
