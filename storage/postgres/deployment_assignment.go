@@ -24,3 +24,19 @@ func (da *DeploymentAssignment) update(conn *sql.DB) (Entity, error) {
 	da.Id = int(id)
 	return da, nil
 }
+
+func (da *DeploymentAssignment) get(conn *sql.DB) (Entity, error) {
+	err := conn.QueryRow(`SELECT id, deployment_target_id, workload_version_id, gitops_commit_id FROM deployment_assignment WHERE id=$1`, da.Id).Scan(&da.Id, &da.DeploymentTargetId, &da.WorkloadVersionId, &da.GitopsCommitId)
+	if err != nil {
+		return nil, err
+	}
+	return da, nil
+}
+
+func (da *DeploymentAssignment) getByNaturalKey(conn *sql.DB) (Entity, error) {
+	err := conn.QueryRow(`SELECT id, deployment_target_id, workload_version_id, gitops_commit_id FROM deployment_assignment WHERE deployment_target_id=$1 AND workload_version_id=$2`, da.DeploymentTargetId, da.WorkloadVersionId).Scan(&da.Id, &da.DeploymentTargetId, &da.WorkloadVersionId, &da.GitopsCommitId)
+	if err != nil {
+		return nil, err
+	}
+	return da, nil
+}

@@ -11,10 +11,14 @@ import (
 
 type Entity interface {
 	update(conn *sql.DB) (Entity, error)
+	get(conn *sql.DB) (Entity, error)
+	getByNaturalKey(conn *sql.DB) (Entity, error)
 }
 
 type DBClient interface {
 	Update(ctx context.Context, enity Entity) (Entity, error)
+	Get(ctx context.Context, enity Entity) (Entity, error)
+	GetByNaturalKey(ctx context.Context, enity Entity) (Entity, error)
 }
 
 type postgresClient struct {
@@ -47,6 +51,34 @@ func (c *postgresClient) Update(ctx context.Context, entity Entity) (Entity, err
 	entity, err = entity.update(conn)
 	if err != nil {
 		log.Printf("fail to update entity: %v", err)
+		return nil, err
+	}
+	return entity, nil
+}
+
+func (c *postgresClient) Get(ctx context.Context, entity Entity) (Entity, error) {
+	conn, err := c.getConnection()
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+	entity, err = entity.get(conn)
+	if err != nil {
+		log.Printf("fail to get entity: %v", err)
+		return nil, err
+	}
+	return entity, nil
+}
+
+func (c *postgresClient) GetByNaturalKey(ctx context.Context, entity Entity) (Entity, error) {
+	conn, err := c.getConnection()
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+	entity, err = entity.getByNaturalKey(conn)
+	if err != nil {
+		log.Printf("fail to get entity by natural key: %v", err)
 		return nil, err
 	}
 	return entity, nil

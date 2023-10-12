@@ -26,3 +26,19 @@ func (app *Application) update(conn *sql.DB) (Entity, error) {
 	app.Id = int(id)
 	return app, nil
 }
+
+func (app *Application) get(conn *sql.DB) (Entity, error) {
+	err := conn.QueryRow(`SELECT id, name, description, workspace_id FROM application WHERE id=$1`, app.Id).Scan(&app.Id, &app.Name, &app.Description, &app.WorkspaceId)
+	if err != nil {
+		return nil, err
+	}
+	return app, nil
+}
+
+func (app *Application) getByNaturalKey(conn *sql.DB) (Entity, error) {
+	err := conn.QueryRow(`SELECT id, name, description, workspace_id FROM application WHERE workspace_id=$1 AND name=$2`, app.WorkspaceId, app.Name).Scan(&app.Id, &app.Name, &app.Description, &app.WorkspaceId)
+	if err != nil {
+		return nil, err
+	}
+	return app, nil
+}

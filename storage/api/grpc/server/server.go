@@ -296,6 +296,52 @@ func (s *storageApiServer) UpdateDeployment(ctx context.Context, deployment *pb.
 	}, nil
 }
 
+// Get Deployment Target
+func (s *storageApiServer) GetDeploymentTarget(ctx context.Context, deploymentTargetSearch *pb.DeploymentTargetSearch) (*pb.DeploymentTarget, error) {
+	log.Printf("Received DeploymentTargetSearch: %v", deploymentTargetSearch)
+
+	//Get Environment by natural key
+	env, err := s.dbClient.GetByNaturalKey(ctx, &db.Environment{
+		Name: deploymentTargetSearch.EnvironmentName,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	//Get Workload by natural key
+	wl, err := s.dbClient.GetByNaturalKey(ctx, &db.Workload{
+		Name: deploymentTargetSearch.WorkloadName,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	//Get DeploymentTarget by natural key
+	dt, err := s.dbClient.GetByNaturalKey(ctx, &db.DeploymentTarget{
+		Name:          deploymentTargetSearch.DeploymentTargetName,
+		EnvironmentId: env.(*db.Environment).Id,
+		WorkloadId:    wl.(*db.Workload).Id,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	deploymentTarget_entity := dt.(*db.DeploymentTarget)
+
+	log.Printf("Got DeploymentTarget: %v", deploymentTarget_entity)
+	//return the deploymentTarget
+	return &pb.DeploymentTarget{
+		Id:                   int32(deploymentTarget_entity.Id),
+		Name:                 deploymentTarget_entity.Name,
+		Description:          deploymentTarget_entity.Description,
+		WorkloadId:           int32(deploymentTarget_entity.WorkloadId),
+		EnvironmentId:        int32(deploymentTarget_entity.EnvironmentId),
+		Labels:               deploymentTarget_entity.Labels,
+		ManifestsStorageType: deploymentTarget_entity.ManifestsStorageType,
+		ManifestsEndpoint:    deploymentTarget_entity.ManifestsEndpoint,
+	}, nil
+}
+
 func newStorageApiServer(dbClient db.DBClient) *storageApiServer {
 	return &storageApiServer{dbClient: dbClient}
 }
@@ -349,6 +395,9 @@ func main() {
 	//log starting the server
 	log.Printf("Starting server on port %d", portInt)
 
-	grpcServer.Serve(lis)
+	err = grpcServer.Serve(lis)
+	if err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
 
 }

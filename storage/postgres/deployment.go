@@ -28,3 +28,19 @@ func (d *Deployment) update(conn *sql.DB) (Entity, error) {
 	d.Id = int(id)
 	return d, nil
 }
+
+func (d *Deployment) get(conn *sql.DB) (Entity, error) {
+	err := conn.QueryRow(`SELECT id, gitops_commit_id, reconciler_id, status, status_message FROM deployment WHERE id=$1`, d.Id).Scan(&d.Id, &d.GitopsCommitId, &d.ReconcilerId, &d.Status, &d.StatusMessage)
+	if err != nil {
+		return nil, err
+	}
+	return d, nil
+}
+
+func (d *Deployment) getByNaturalKey(conn *sql.DB) (Entity, error) {
+	err := conn.QueryRow(`SELECT id, gitops_commit_id, reconciler_id, status, status_message FROM deployment WHERE gitops_commit_id=$1 AND reconciler_id=$2`, d.GitopsCommitId, d.ReconcilerId).Scan(&d.Id, &d.GitopsCommitId, &d.ReconcilerId, &d.Status, &d.StatusMessage)
+	if err != nil {
+		return nil, err
+	}
+	return d, nil
+}

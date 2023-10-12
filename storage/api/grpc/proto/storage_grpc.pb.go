@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v3.21.9
-// source: storage.proto
+// source: proto/storage.proto
 
 package proto
 
@@ -32,6 +32,7 @@ type StorageApiClient interface {
 	UpdateHost(ctx context.Context, in *Host, opts ...grpc.CallOption) (*Host, error)
 	UpdateReconciler(ctx context.Context, in *Reconciler, opts ...grpc.CallOption) (*Reconciler, error)
 	UpdateDeployment(ctx context.Context, in *Deployment, opts ...grpc.CallOption) (*Deployment, error)
+	GetDeploymentTarget(ctx context.Context, in *DeploymentTargetSearch, opts ...grpc.CallOption) (*DeploymentTarget, error)
 }
 
 type storageApiClient struct {
@@ -132,6 +133,15 @@ func (c *storageApiClient) UpdateDeployment(ctx context.Context, in *Deployment,
 	return out, nil
 }
 
+func (c *storageApiClient) GetDeploymentTarget(ctx context.Context, in *DeploymentTargetSearch, opts ...grpc.CallOption) (*DeploymentTarget, error) {
+	out := new(DeploymentTarget)
+	err := c.cc.Invoke(ctx, "/proto.StorageApi/GetDeploymentTarget", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // StorageApiServer is the server API for StorageApi service.
 // All implementations must embed UnimplementedStorageApiServer
 // for forward compatibility
@@ -146,6 +156,7 @@ type StorageApiServer interface {
 	UpdateHost(context.Context, *Host) (*Host, error)
 	UpdateReconciler(context.Context, *Reconciler) (*Reconciler, error)
 	UpdateDeployment(context.Context, *Deployment) (*Deployment, error)
+	GetDeploymentTarget(context.Context, *DeploymentTargetSearch) (*DeploymentTarget, error)
 	mustEmbedUnimplementedStorageApiServer()
 }
 
@@ -182,6 +193,9 @@ func (UnimplementedStorageApiServer) UpdateReconciler(context.Context, *Reconcil
 }
 func (UnimplementedStorageApiServer) UpdateDeployment(context.Context, *Deployment) (*Deployment, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateDeployment not implemented")
+}
+func (UnimplementedStorageApiServer) GetDeploymentTarget(context.Context, *DeploymentTargetSearch) (*DeploymentTarget, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDeploymentTarget not implemented")
 }
 func (UnimplementedStorageApiServer) mustEmbedUnimplementedStorageApiServer() {}
 
@@ -376,6 +390,24 @@ func _StorageApi_UpdateDeployment_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _StorageApi_GetDeploymentTarget_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeploymentTargetSearch)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StorageApiServer).GetDeploymentTarget(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.StorageApi/GetDeploymentTarget",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StorageApiServer).GetDeploymentTarget(ctx, req.(*DeploymentTargetSearch))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // StorageApi_ServiceDesc is the grpc.ServiceDesc for StorageApi service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -423,7 +455,11 @@ var StorageApi_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "UpdateDeployment",
 			Handler:    _StorageApi_UpdateDeployment_Handler,
 		},
+		{
+			MethodName: "GetDeploymentTarget",
+			Handler:    _StorageApi_GetDeploymentTarget_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "storage.proto",
+	Metadata: "proto/storage.proto",
 }

@@ -25,3 +25,19 @@ func (ws *Workspace) update(conn *sql.DB) (Entity, error) {
 	ws.Id = int(id)
 	return ws, nil
 }
+
+func (ws *Workspace) get(conn *sql.DB) (Entity, error) {
+	err := conn.QueryRow(`SELECT id, name, description FROM workspace WHERE id=$1`, ws.Id).Scan(&ws.Id, &ws.Name, &ws.Description)
+	if err != nil {
+		return nil, err
+	}
+	return ws, nil
+}
+
+func (ws *Workspace) getByNaturalKey(conn *sql.DB) (Entity, error) {
+	err := conn.QueryRow(`SELECT id, name, description FROM workspace WHERE name=$1`, ws.Name).Scan(&ws.Id, &ws.Name, &ws.Description)
+	if err != nil {
+		return nil, err
+	}
+	return ws, nil
+}

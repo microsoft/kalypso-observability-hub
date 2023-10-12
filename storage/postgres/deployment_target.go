@@ -35,3 +35,19 @@ func (dt *DeploymentTarget) update(conn *sql.DB) (Entity, error) {
 	dt.Id = int(id)
 	return dt, nil
 }
+
+func (dt *DeploymentTarget) get(conn *sql.DB) (Entity, error) {
+	err := conn.QueryRow(`SELECT id, name, description, workload_id, environment_id, labels, manifests_storage_type, manifests_endpoint FROM deployment_target WHERE id=$1`, dt.Id).Scan(&dt.Id, &dt.Name, &dt.Description, &dt.WorkloadId, &dt.EnvironmentId, &dt.Labels, &dt.ManifestsStorageType, &dt.ManifestsEndpoint)
+	if err != nil {
+		return nil, err
+	}
+	return dt, nil
+}
+
+func (dt *DeploymentTarget) getByNaturalKey(conn *sql.DB) (Entity, error) {
+	err := conn.QueryRow(`SELECT id, name, description, workload_id, environment_id, labels, manifests_storage_type, manifests_endpoint FROM deployment_target WHERE workload_id=$1 AND environment_id=$2 AND name=$3`, dt.WorkloadId, dt.EnvironmentId, dt.Name).Scan(&dt.Id, &dt.Name, &dt.Description, &dt.WorkloadId, &dt.EnvironmentId, &dt.Labels, &dt.ManifestsStorageType, &dt.ManifestsEndpoint)
+	if err != nil {
+		return nil, err
+	}
+	return dt, nil
+}
