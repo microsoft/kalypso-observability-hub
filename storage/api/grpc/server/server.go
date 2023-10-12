@@ -308,9 +308,27 @@ func (s *storageApiServer) GetDeploymentTarget(ctx context.Context, deploymentTa
 		return nil, err
 	}
 
+	//Get Workspace by natural key
+	ws, err := s.dbClient.GetByNaturalKey(ctx, &db.Workspace{
+		Name: deploymentTargetSearch.WorkspaceName,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	//Get Application by natural key
+	app, err := s.dbClient.GetByNaturalKey(ctx, &db.Application{
+		Name:        deploymentTargetSearch.ApplicationName,
+		WorkspaceId: ws.(*db.Workspace).Id,
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	//Get Workload by natural key
 	wl, err := s.dbClient.GetByNaturalKey(ctx, &db.Workload{
-		Name: deploymentTargetSearch.WorkloadName,
+		Name:          deploymentTargetSearch.WorkloadName,
+		ApplicationId: app.(*db.Application).Id,
 	})
 	if err != nil {
 		return nil, err
