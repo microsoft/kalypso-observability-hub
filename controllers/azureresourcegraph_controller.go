@@ -106,10 +106,6 @@ func (r *AzureResourceGraphReconciler) Reconcile(ctx context.Context, req ctrl.R
 		return r.manageFailure(ctx, reqLogger, arg, err, "Failed to get Reconcilers Data")
 	}
 
-	//log the reconcilers
-	reqLogger.Info("=== Reconcilers ===")
-	reqLogger.Info(fmt.Sprintf("Reconcilers: " + fmt.Sprint(reconcilersData) + "\n"))
-
 	// Get list of all all reconcilers with the label set to the name of the AzureResourceGraph
 	reconcilerList := &hubv1alpha1.ReconcilerList{}
 	err = r.List(ctx, reconcilerList, client.MatchingLabels(map[string]string{"azure-resource-graph": arg.Name}))
@@ -132,7 +128,6 @@ func (r *AzureResourceGraphReconciler) Reconcile(ctx context.Context, req ctrl.R
 			return r.manageFailure(ctx, reqLogger, arg, err, "Failed to create or update Reconciler")
 		}
 		// log the created or updated reconciler
-		reqLogger.Info("=== Created or Updated Reconciler ===")
 		reqLogger.Info(fmt.Sprintf("Created or Updated Reconciler: " + fmt.Sprint(reconciler) + "\n"))
 	}
 
@@ -170,7 +165,6 @@ func (r *AzureResourceGraphReconciler) garbageCollectReconcilers(ctx context.Con
 					return err
 				}
 				// log the deleted reconciler
-				logger.Info("=== Deleted Reconciler ===")
 				logger.Info(fmt.Sprintf("Deleted Reconciler: " + fmt.Sprint(reconciler) + "\n"))
 			}
 
@@ -243,8 +237,6 @@ func (r *AzureResourceGraphReconciler) getReconcilersData(ctx context.Context, f
 	for _, fluxConfig := range fluxConfigs {
 		if fluxConfig != nil {
 
-			logger.Info("=== Flux Config ===")
-			logger.Info(fmt.Sprintf("Flux Config: " + fmt.Sprint(fluxConfig) + "\n"))
 			fluxConfigMap := fluxConfig.(map[string]interface{})
 
 			// Get Reconciler Name
@@ -345,12 +337,6 @@ func (r *AzureResourceGraphReconciler) getReconcilersDataFromChildKalypsoObjects
 	fluxConfigurationDetal := res.FluxConfiguration
 	// iteretae over the statuses and log them
 	for _, status := range fluxConfigurationDetal.Properties.Statuses {
-		// iterate over status conditions and log the messages
-		logger.Info("=== Status  ===")
-		logger.Info(fmt.Sprintf("Name: " + fmt.Sprint(*status.Name) + "\n"))
-		logger.Info(fmt.Sprintf("Kind: " + fmt.Sprint(*status.Kind) + "\n"))
-		logger.Info(fmt.Sprintf("ComplianceState: " + fmt.Sprint(*status.ComplianceState) + "\n"))
-
 		if *status.Kind != "Kustomization" {
 			continue
 		}
@@ -370,11 +356,7 @@ func (r *AzureResourceGraphReconciler) getReconcilersDataFromChildKalypsoObjects
 		if len(nameParts) < 2 {
 			continue
 		}
-		// extract workload name
-		// e.g. busybox-busybox-perline -> busybox
 		workloadName := nameParts[0]
-		//remove workloadName with the following "-" from the deploymentTargetName
-		// e.g. busybox-busybox-perline -> busybox-perline
 		deploymentTargetName := strings.Replace(workloadDeploymentTargetName, workloadName+"-", "", 1)
 
 		dt, err := storageClient.GetDeploymentTarget(ctx, &pb.DeploymentTargetSearch{
@@ -385,13 +367,8 @@ func (r *AzureResourceGraphReconciler) getReconcilersDataFromChildKalypsoObjects
 			ApplicationName:      application,
 		})
 		if err != nil {
-			logger.Info("=== Deployment Target Not Found ===")
-			logger.Info(fmt.Sprintf("DeploymentTargetName: " + fmt.Sprint(deploymentTargetName) + "\n"))
 			continue
 		}
-
-		logger.Info("=== Deployment Target Found ===")
-		logger.Info(fmt.Sprintf("DeploymentTargetName: " + fmt.Sprint(deploymentTargetName) + "\n"))
 
 		manifestsEndpoint := dt.ManifestsEndpoint
 		statusMessage := ""
