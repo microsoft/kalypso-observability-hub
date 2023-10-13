@@ -2,9 +2,9 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: deployment-observability-dashboard
-  namespace: hub
   labels:
     grafana_dashboard: "1"  
+  {{- include "grafana.labels" . | nindent 4 }}    
 data:
   deployment-observability-dashboard.json:
     |-

@@ -246,7 +246,8 @@ func (r *DeploymentDescriptorReconciler) manageFailure(ctx context.Context, logg
 // SetupWithManager sets up the controller with the Manager.
 func (r *DeploymentDescriptorReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&hubv1alpha1.DeploymentDescriptor{}, builder.WithPredicates(predicate.GenerationChangedPredicate{})).
+		For(&hubv1alpha1.DeploymentDescriptor{}, builder.WithPredicates(predicate.GenerationChangedPredicate{},
+			predicate.LabelChangedPredicate{})).
 		Complete(r)
 }
 
