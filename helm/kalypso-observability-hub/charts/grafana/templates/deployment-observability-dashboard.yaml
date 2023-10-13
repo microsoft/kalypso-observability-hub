@@ -109,7 +109,7 @@ data:
                 {
                   "matcher": {
                     "id": "byName",
-                    "options": "Clusters"
+                    "options": "Hosts"
                   },
                   "properties": [
                     {
@@ -326,12 +326,12 @@ data:
                     "workspace_name": 0
                   },
                   "renameByName": {
-                    "application_name": "Application",
+                    "application_name": "Application / use-case",
                     "deployed_workload_version": "Deployed",
                     "deployment_target_name": "Deployment Target",
                     "environemnt_name": "Environment",
                     "environment_name": "Environment",
-                    "reconcilers": "Clusters",
+                    "reconcilers": "Hosts",
                     "status": "Status",
                     "workload_name": "Workload",
                     "workload_version": "Scheduled",
@@ -707,7 +707,7 @@ data:
                     "workspace_name": 0
                   },
                   "renameByName": {
-                    "application_name": "Application",
+                    "application_name": "Application / use-case",
                     "d2_deployed_workload_version": "D2 Deployed",
                     "d2_reconcilers": "D2 Clusters",
                     "d2_successfull_reconcilers": "D2 Successful",
@@ -719,15 +719,15 @@ data:
                     "deployment_target_id": "",
                     "deployment_target_name": "Deployment Target",
                     "dev_deployed_workload_version": "Dev Deployed",
-                    "dev_reconcilers": "Dev Clusters",
+                    "dev_reconcilers": "Dev Hosts",
                     "dev_successfull_reconcilers": "Dev Successful",
                     "dev_workload_version": "Dev Scheduled",
                     "prod_deployed_workload_version": "Prod Deployed",
-                    "prod_reconcilers": "Prod Clusters",
+                    "prod_reconcilers": "Prod Hosts",
                     "prod_successfull_reconcilers": "Prod Successful",
                     "prod_workload_version": "Prod Scheduled",
                     "stage_deployed_workload_version": "Stage Deployed",
-                    "stage_reconcilers": "Stage Clusters",
+                    "stage_reconcilers": "Stage Hosts",
                     "stage_successfull_reconcilers": "Stage Successful",
                     "stage_workload_version": "Stage Scheduled",
                     "t2_deployed_workload_version": "T2 Deployed",
@@ -758,7 +758,6 @@ data:
         "timezone": "",
         "title": "Deployment Observability",
         "uid": "9XvMES3Vz",
-        "version": 1,
+        "version": 2,
         "weekStart": ""
-      }
-      
+      }    

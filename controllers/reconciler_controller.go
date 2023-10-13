@@ -93,7 +93,7 @@ func (r *ReconcilerReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		HostId:               host.Id,
 		Name:                 reconciler.Spec.ReconcilerName,
 		Description:          reconciler.Spec.ReconcilerName,
-		ReconcilerType:       reconciler.Spec.Type,
+		ReconcilerType:       (string)(reconciler.Spec.Type),
 		ManifestsStorageType: (string)(reconciler.Spec.ManifestsStorageType),
 		ManifestsEndpoint:    reconciler.Spec.ManifestsEndpoint,
 	})

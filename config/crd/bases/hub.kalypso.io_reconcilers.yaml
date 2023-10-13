@@ -59,12 +59,13 @@ spec:
                 type: string
               reconcilerName:
                 type: string
-              type:
+              reconcilerType:
                 type: string
             required:
             - hostName
             - manifestsEndpoint
             - reconcilerName
+            - reconcilerType
             type: object
           status:
             description: ReconcilerStatus defines the observed state of Reconciler

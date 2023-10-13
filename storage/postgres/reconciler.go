@@ -35,3 +35,19 @@ func (r *Reconciler) update(conn *sql.DB) (Entity, error) {
 	r.Id = int(id)
 	return r, nil
 }
+
+func (r *Reconciler) get(conn *sql.DB) (Entity, error) {
+	err := conn.QueryRow(`SELECT id, name, host_id, description, reconciler_type, labels, manifests_storage_type, manifests_endpoint FROM reconciler WHERE id=$1`, r.Id).Scan(&r.Id, &r.Name, &r.HostId, &r.Description, &r.ReconcilerType, &r.Labels, &r.ManifestsStorageType, &r.ManifestsEndpoint)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+func (r *Reconciler) getByNaturalKey(conn *sql.DB) (Entity, error) {
+	err := conn.QueryRow(`SELECT id, name, host_id, description, reconciler_type, labels, manifests_storage_type, manifests_endpoint FROM reconciler WHERE host_id=$1 AND name=$2`, r.HostId, r.Name).Scan(&r.Id, &r.Name, &r.HostId, &r.Description, &r.ReconcilerType, &r.Labels, &r.ManifestsStorageType, &r.ManifestsEndpoint)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}

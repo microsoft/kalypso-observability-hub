@@ -34,8 +34,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	azidentity "github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	armkubernetesconfiguration "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/kubernetesconfiguration/armkubernetesconfiguration"
 	armresourcegraph "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resourcegraph/armresourcegraph"
 	hubv1alpha1 "github.com/microsoft/kalypso-observability-hub/api/v1alpha1"
+	grpcClient "github.com/microsoft/kalypso-observability-hub/storage/api/grpc/client"
+	pb "github.com/microsoft/kalypso-observability-hub/storage/api/grpc/proto"
 )
 
 // AzureResourceGraphReconciler reconciles a AzureResourceGraph object
@@ -77,7 +80,13 @@ func (r *AzureResourceGraphReconciler) Reconcile(ctx context.Context, req ctrl.R
 		return ctrl.Result{}, nil
 	}
 
-	argClient, err := r.getARGClient(arg)
+	//get Azure Credentials
+	cred, err := r.getAzureCredentials(arg)
+	if err != nil {
+		return r.manageFailure(ctx, reqLogger, arg, err, "Failed to get Azure Credentials")
+	}
+
+	argClient, err := r.getARGClient(cred)
 	if err != nil {
 		return r.manageFailure(ctx, reqLogger, arg, err, "Failed to get Azure Resource Graph client")
 	}
@@ -87,7 +96,12 @@ func (r *AzureResourceGraphReconciler) Reconcile(ctx context.Context, req ctrl.R
 		return r.manageFailure(ctx, reqLogger, arg, err, "Failed to get Flux Configurations")
 	}
 
-	reconcilersData, err := r.getReconcilersData(ctx, fluxConfigs.Data.([]interface{}), reqLogger)
+	fluxConfigClient, err := r.getFluxConfigClient(cred, arg.Spec.Subscription)
+	if err != nil {
+		return r.manageFailure(ctx, reqLogger, arg, err, "Failed to get Flux Config Client")
+	}
+
+	reconcilersData, err := r.getReconcilersData(ctx, fluxConfigClient, fluxConfigs.Data.([]interface{}), reqLogger)
 	if err != nil {
 		return r.manageFailure(ctx, reqLogger, arg, err, "Failed to get Reconcilers Data")
 	}
@@ -138,25 +152,28 @@ func (r *AzureResourceGraphReconciler) Reconcile(ctx context.Context, req ctrl.R
 	return ctrl.Result{RequeueAfter: arg.Spec.Interval.Duration}, nil
 }
 
-// Garbage collect reconcilers
+// Garbage collect Arc reconcilers
 func (r *AzureResourceGraphReconciler) garbageCollectReconcilers(ctx context.Context, arg *hubv1alpha1.AzureResourceGraph, reconcilerList *hubv1alpha1.ReconcilerList, reconcilersData []hubv1alpha1.ReconcilerSpec, logger logr.Logger) error {
 	// iterate over the list of reconcilers and delete the ones that are not in the list of reconcilers from the Azure Resource Graph
 	for _, reconciler := range reconcilerList.Items {
-		found := false
-		for _, argReconciler := range reconcilersData {
-			if argReconciler.HostName == reconciler.Spec.HostName && argReconciler.ReconcilerName == reconciler.Spec.ReconcilerName {
-				found = true
-				break
+		if reconciler.Spec.Type == hubv1alpha1.ReconcilerTypeArc {
+			found := false
+			for _, argReconciler := range reconcilersData {
+				if argReconciler.HostName == reconciler.Spec.HostName && argReconciler.ReconcilerName == reconciler.Spec.ReconcilerName {
+					found = true
+					break
+				}
 			}
-		}
-		if !found {
-			err := r.Delete(ctx, &reconciler)
-			if err != nil {
-				return err
+			if !found {
+				err := r.Delete(ctx, &reconciler)
+				if err != nil {
+					return err
+				}
+				// log the deleted reconciler
+				logger.Info("=== Deleted Reconciler ===")
+				logger.Info(fmt.Sprintf("Deleted Reconciler: " + fmt.Sprint(reconciler) + "\n"))
 			}
-			// log the deleted reconciler
-			logger.Info("=== Deleted Reconciler ===")
-			logger.Info(fmt.Sprintf("Deleted Reconciler: " + fmt.Sprint(reconciler) + "\n"))
+
 		}
 
 	}
@@ -213,9 +230,16 @@ func (r *AzureResourceGraphReconciler) createOrUpdateReconciler(ctx context.Cont
 }
 
 // get a list of ReconcilerSpec from the Azure Resource Graph
-func (r *AzureResourceGraphReconciler) getReconcilersData(ctx context.Context, fluxConfigs []interface{}, logger logr.Logger) ([]hubv1alpha1.ReconcilerSpec, error) {
-	// Iteraete over the results and create a slice of ReconcilerSpec
+// at this point only git/kustomize is supported. Helm is not supported.
+func (r *AzureResourceGraphReconciler) getReconcilersData(ctx context.Context, fluxConfigClient *armkubernetesconfiguration.FluxConfigurationsClient, fluxConfigs []interface{}, logger logr.Logger) ([]hubv1alpha1.ReconcilerSpec, error) {
+	// Iterate over the results and create a slice of ReconcilerSpec
 	var reconcilerData []hubv1alpha1.ReconcilerSpec
+
+	storageClient, err := grpcClient.GetObservabilityStorageGrpcClient()
+	if err != nil {
+		return nil, err
+	}
+
 	for _, fluxConfig := range fluxConfigs {
 		if fluxConfig != nil {
 
@@ -224,13 +248,14 @@ func (r *AzureResourceGraphReconciler) getReconcilersData(ctx context.Context, f
 			fluxConfigMap := fluxConfig.(map[string]interface{})
 
 			// Get Reconciler Name
-			reconcilerName := fluxConfigMap["name"].(string)
+			fluxConfigName := fluxConfigMap["name"].(string)
 
 			// Get the resource group name
 			resourceGroup := fluxConfigMap["resourceGroup"].(string)
 			// Get the id
 			id := fluxConfigMap["id"].(string)
 			clusterName := strings.Split(id, "/")[8]
+
 			propeties := fluxConfigMap["properties"].(map[string]interface{})
 
 			gitRepository := propeties["gitRepository"].(map[string]interface{})
@@ -261,37 +286,134 @@ func (r *AzureResourceGraphReconciler) getReconcilersData(ctx context.Context, f
 			// }
 			gitOpsCommitId := sourceSyncedCommitId.(string)
 
-			var status hubv1alpha1.DeploymentStatusType
 			statusMessage := ""
 			sourceComplianceState := propeties["complianceState"]
 			if sourceComplianceState != nil {
-				status = r.translateComplianceState(sourceComplianceState.(string))
 				statusMessage = r.getStatusMessage(sourceComplianceState.(string), propeties["statuses"].([]interface{}))
-
 			}
 
-			deployment := hubv1alpha1.Deployment{
-				GitOpsCommitId: gitOpsCommitId,
-				Status:         status,
-				StatusMessage:  statusMessage,
-			}
-
-			// Create the reconciler spec
-			reconciler := hubv1alpha1.ReconcilerSpec{
-				HostName:             fmt.Sprintf("%s-%s", resourceGroup, clusterName),
-				ReconcilerName:       reconcilerName,
-				Type:                 "flux",
-				ManifestsStorageType: hubv1alpha1.Git,
-				ManifestsEndpoint:    endpoint,
-				Deployment:           deployment,
-			}
+			reconciler := r.createReconciler(sourceComplianceState.(string), statusMessage, gitOpsCommitId,
+				resourceGroup, clusterName, fluxConfigName, endpoint, hubv1alpha1.ReconcilerTypeArc)
 
 			reconcilerData = append(reconcilerData, reconciler)
+
+			cheildReconcilerData, err := r.getReconcilersDataFromChildKalypsoObjects(ctx, storageClient,
+				resourceGroup, clusterName, fluxConfigName, fluxConfigClient, fluxConfigs, logger)
+			if err != nil {
+				return nil, err
+			}
+			reconcilerData = append(reconcilerData, cheildReconcilerData...)
 
 		}
 	}
 	return reconcilerData, nil
 
+}
+func (r *AzureResourceGraphReconciler) createReconciler(status string, statusMessage string, gitOpsCommitId string,
+	resourceGroup string, clusterName string, reconcilerName string, manifestsEndpoint string, reconcilerType hubv1alpha1.ReconcilerType) hubv1alpha1.ReconcilerSpec {
+	reconcilerStatus := r.translateComplianceState(status)
+
+	deployment := hubv1alpha1.Deployment{
+		GitOpsCommitId: gitOpsCommitId,
+		Status:         reconcilerStatus,
+		StatusMessage:  statusMessage,
+	}
+
+	// Create the reconciler spec
+	reconciler := hubv1alpha1.ReconcilerSpec{
+		HostName:             fmt.Sprintf("%s-%s", resourceGroup, clusterName),
+		ReconcilerName:       reconcilerName,
+		Type:                 reconcilerType,
+		ManifestsStorageType: hubv1alpha1.Git,
+		ManifestsEndpoint:    manifestsEndpoint,
+		Deployment:           deployment,
+	}
+
+	return reconciler
+
+}
+
+func (r *AzureResourceGraphReconciler) getReconcilersDataFromChildKalypsoObjects(ctx context.Context, storageClient grpcClient.ObservabilityStorageGrpcClient, resourceGroup string, clusterName string, fluxConfigName string, fluxConfigClient *armkubernetesconfiguration.FluxConfigurationsClient, fluxConfigs []interface{}, logger logr.Logger) ([]hubv1alpha1.ReconcilerSpec, error) {
+	var reconcilerData []hubv1alpha1.ReconcilerSpec
+
+	// TODO: identify cluster type (AKS vs conect cluster)
+	res, err := fluxConfigClient.Get(ctx, resourceGroup, "Microsoft.ContainerService", "managedClusters", clusterName, fluxConfigName, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	fluxConfigurationDetal := res.FluxConfiguration
+	// iteretae over the statuses and log them
+	for _, status := range fluxConfigurationDetal.Properties.Statuses {
+		// iterate over status conditions and log the messages
+		logger.Info("=== Status  ===")
+		logger.Info(fmt.Sprintf("Name: " + fmt.Sprint(*status.Name) + "\n"))
+		logger.Info(fmt.Sprintf("Kind: " + fmt.Sprint(*status.Kind) + "\n"))
+		logger.Info(fmt.Sprintf("ComplianceState: " + fmt.Sprint(*status.ComplianceState) + "\n"))
+
+		if *status.Kind != "Kustomization" {
+			continue
+		}
+
+		//TODO Update Kalypso: name deployment target as workload.deploymentTarget or without workload at all
+		// expected flux resource name format: env.workspace.application.workload-deploymentTarget[.clusterType]
+		nameParts := strings.Split(*status.Name, ".")
+		if len(nameParts) < 4 {
+			continue
+		}
+		environmentName := nameParts[0]
+		workspace := nameParts[1]
+		application := nameParts[2]
+		workloadDeploymentTargetName := nameParts[3]
+
+		nameParts = strings.Split(workloadDeploymentTargetName, "-")
+		if len(nameParts) < 2 {
+			continue
+		}
+		// extract workload name
+		// e.g. busybox-busybox-perline -> busybox
+		workloadName := nameParts[0]
+		//remove workloadName with the following "-" from the deploymentTargetName
+		// e.g. busybox-busybox-perline -> busybox-perline
+		deploymentTargetName := strings.Replace(workloadDeploymentTargetName, workloadName+"-", "", 1)
+
+		dt, err := storageClient.GetDeploymentTarget(ctx, &pb.DeploymentTargetSearch{
+			WorkloadName:         workloadName,
+			DeploymentTargetName: deploymentTargetName,
+			EnvironmentName:      environmentName,
+			WorkspaceName:        workspace,
+			ApplicationName:      application,
+		})
+		if err != nil {
+			logger.Info("=== Deployment Target Not Found ===")
+			logger.Info(fmt.Sprintf("DeploymentTargetName: " + fmt.Sprint(deploymentTargetName) + "\n"))
+			continue
+		}
+
+		logger.Info("=== Deployment Target Found ===")
+		logger.Info(fmt.Sprintf("DeploymentTargetName: " + fmt.Sprint(deploymentTargetName) + "\n"))
+
+		manifestsEndpoint := dt.ManifestsEndpoint
+		statusMessage := ""
+		gitOpsCommitId := ""
+		for _, statusCondition := range status.StatusConditions {
+			if statusCondition.Message != nil {
+				statusConditionMessage := *statusCondition.Message
+				shaIndex := strings.Index(statusConditionMessage, "sha1:")
+				if shaIndex > 0 {
+					gitOpsCommitId = environmentName + "@" + statusConditionMessage[shaIndex:shaIndex+45]
+				}
+				statusMessage += statusConditionMessage
+			}
+
+		}
+
+		reconciler := r.createReconciler(string(*status.ComplianceState), statusMessage, gitOpsCommitId,
+			resourceGroup, clusterName, *status.Name, manifestsEndpoint, hubv1alpha1.ReconcilerTypeFlux)
+		reconcilerData = append(reconcilerData, reconciler)
+
+	}
+	return reconcilerData, nil
 }
 
 // Translate Compliance State
@@ -301,6 +423,10 @@ func (r *AzureResourceGraphReconciler) translateComplianceState(complianceState 
 	case "Compliant":
 		return hubv1alpha1.DeploymentStatusSuccess
 	case "Non-Compliant":
+		return hubv1alpha1.DeploymentStatusFailed
+	case "Noncompliant":
+		return hubv1alpha1.DeploymentStatusFailed
+	case "Failed":
 		return hubv1alpha1.DeploymentStatusFailed
 	default:
 		return hubv1alpha1.DeploymentStatusPending
@@ -321,8 +447,8 @@ func (r *AzureResourceGraphReconciler) getStatusMessage(complianceState string, 
 	return statusMessage
 }
 
-// Get ARG client
-func (r *AzureResourceGraphReconciler) getARGClient(arg *hubv1alpha1.AzureResourceGraph) (*armresourcegraph.Client, error) {
+// Get Acxure Credentials
+func (r *AzureResourceGraphReconciler) getAzureCredentials(arg *hubv1alpha1.AzureResourceGraph) (*azidentity.DefaultAzureCredential, error) {
 	os.Setenv("AZURE_TENANT_ID", arg.Spec.Tenant)
 	os.Setenv("AZURE_CLIENT_ID", arg.Spec.ManagedIdentiy)
 
@@ -330,11 +456,27 @@ func (r *AzureResourceGraphReconciler) getARGClient(arg *hubv1alpha1.AzureResour
 	if err != nil {
 		return nil, err
 	}
+	return cred, nil
+}
+
+// Get ARG client
+func (r *AzureResourceGraphReconciler) getARGClient(cred *azidentity.DefaultAzureCredential) (*armresourcegraph.Client, error) {
+
 	clientFactory, err := armresourcegraph.NewClientFactory(cred, nil)
 	if err != nil {
 		return nil, err
 	}
 	return clientFactory.NewClient(), nil
+}
+
+// Get Flux Config Client
+func (r *AzureResourceGraphReconciler) getFluxConfigClient(cred *azidentity.DefaultAzureCredential, subscriptionId string) (*armkubernetesconfiguration.FluxConfigurationsClient, error) {
+	clientFactory, err := armkubernetesconfiguration.NewClientFactory(subscriptionId, cred, nil)
+	if err != nil {
+		return nil, err
+	}
+	return clientFactory.NewFluxConfigurationsClient(), nil
+
 }
 
 // Get Flux Configurations

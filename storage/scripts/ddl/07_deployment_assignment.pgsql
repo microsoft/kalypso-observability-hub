@@ -5,7 +5,5 @@ create table if not exists deployment_assignment(
     gitops_commit_id varchar(100) not null,
     created_on timestamp default current_timestamp,
     created_by varchar(30) default current_user,
-    unique(deployment_target_id, workload_version_id)
+    unique(deployment_target_id, workload_version_id, gitops_commit_id)
 );
-
-

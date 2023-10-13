@@ -36,6 +36,13 @@ const (
 	DeploymentStatusFailed  DeploymentStatusType = "failure"
 )
 
+type ReconcilerType string
+
+const (
+	ReconcilerTypeFlux ReconcilerType = "flux"
+	ReconcilerTypeArc  ReconcilerType = "arc"
+)
+
 type Deployment struct {
 	GitOpsCommitId string               `json:"gitOpsCommitId"`
 	Status         DeploymentStatusType `json:"status"`
@@ -50,8 +57,8 @@ type ReconcilerSpec struct {
 	// +required
 	ReconcilerName string `json:"reconcilerName"`
 
-	// +optional
-	Type string `json:"type"`
+	// +required
+	Type ReconcilerType `json:"reconcilerType"`
 
 	// +optional
 	ManifestsStorageType ManifestsStorageType `json:"manifestsStorageType"`

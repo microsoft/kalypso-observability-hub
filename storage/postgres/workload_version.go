@@ -26,3 +26,19 @@ func (wv *WorkloadVersion) update(conn *sql.DB) (Entity, error) {
 	wv.Id = int(id)
 	return wv, nil
 }
+
+func (wv *WorkloadVersion) get(conn *sql.DB) (Entity, error) {
+	err := conn.QueryRow(`SELECT id, version, build_id, build_commit_id, workload_id FROM workload_version WHERE id=$1`, wv.Id).Scan(&wv.Id, &wv.Version, &wv.BuildId, &wv.BuildCommitId, &wv.WorkloadId)
+	if err != nil {
+		return nil, err
+	}
+	return wv, nil
+}
+
+func (wv *WorkloadVersion) getByNaturalKey(conn *sql.DB) (Entity, error) {
+	err := conn.QueryRow(`SELECT id, version, build_id, build_commit_id, workload_id FROM workload_version WHERE workload_id=$1 AND version=$2`, wv.WorkloadId, wv.Version).Scan(&wv.Id, &wv.Version, &wv.BuildId, &wv.BuildCommitId, &wv.WorkloadId)
+	if err != nil {
+		return nil, err
+	}
+	return wv, nil
+}

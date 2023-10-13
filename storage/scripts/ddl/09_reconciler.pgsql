@@ -1,6 +1,6 @@
 create table if not exists reconciler(
     id serial primary key,
-    name varchar(50) not null unique,
+    name varchar(150) not null unique,
     host_id int not null references host(id),
     description text,
     reconciler_type varchar(20),
