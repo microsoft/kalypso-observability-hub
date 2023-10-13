@@ -399,7 +399,6 @@ func (r *AzureResourceGraphReconciler) getReconcilersDataFromChildKalypsoObjects
 		for _, statusCondition := range status.StatusConditions {
 			if statusCondition.Message != nil {
 				statusConditionMessage := *statusCondition.Message
-				//extract commitid with regex from the statusMessage. commitid starts with "sha1:"
 				shaIndex := strings.Index(statusConditionMessage, "sha1:")
 				if shaIndex > 0 {
 					gitOpsCommitId = environmentName + "@" + statusConditionMessage[shaIndex:shaIndex+45]
