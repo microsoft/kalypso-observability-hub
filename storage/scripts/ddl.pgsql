@@ -95,10 +95,8 @@ create table if not exists deployment_assignment(
     gitops_commit_id varchar(100) not null,
     created_on timestamp default current_timestamp,
     created_by varchar(30) default current_user,
-    unique(deployment_target_id, workload_version_id)
+    unique(deployment_target_id, workload_version_id, gitops_commit_id)
 );
-
-
 create table if not exists host(
     id serial primary key,
     name varchar(50) not null unique,
@@ -114,7 +112,7 @@ create table if not exists host(
 
 create table if not exists reconciler(
     id serial primary key,
-    name varchar(50) not null unique,
+    name varchar(150) not null unique,
     host_id int not null references host(id),
     description text,
     reconciler_type varchar(20),
@@ -142,9 +140,8 @@ create table if not exists deployment(
     unique(gitops_commit_id, reconciler_id)    
 );
 
-
-
-
  CREATE USER hub WITH PASSWORD 'c67';
  GRANT pg_read_all_data TO hub;
+
+
 
