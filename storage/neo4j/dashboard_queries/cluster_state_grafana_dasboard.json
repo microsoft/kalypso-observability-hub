@@ -1,0 +1,214 @@
+{
+    "annotations": {
+      "list": [
+        {
+          "builtIn": 1,
+          "datasource": {
+            "type": "grafana",
+            "uid": "-- Grafana --"
+          },
+          "enable": true,
+          "hide": true,
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "name": "Annotations & Alerts",
+          "target": {
+            "limit": 100,
+            "matchAny": false,
+            "tags": [],
+            "type": "dashboard"
+          },
+          "type": "dashboard"
+        }
+      ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": 10,
+    "links": [],
+    "liveNow": false,
+    "panels": [
+      {
+        "datasource": {
+          "type": "kniepdennis-neo4j-datasource",
+          "uid": "pIf4L-DIk"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "align": "auto",
+              "displayMode": "auto",
+              "inspect": false
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 9,
+          "w": 20,
+          "x": 0,
+          "y": 0
+        },
+        "id": 1,
+        "options": {
+          "footer": {
+            "fields": "",
+            "reducer": [
+              "sum"
+            ],
+            "show": false
+          },
+          "showHeader": true
+        },
+        "pluginVersion": "9.1.0",
+        "targets": [
+          {
+            "cypherQuery": "MATCH (ws:Workspace)-[:CONTAINS_APP]->(app:Application)-[:CONTAINS_WORKLOAD]->(wl:Workload)-[:HAS_DEPLOYMENT_TARGET]->(dt:DeploymentTarget)<-[:HAS_DEPLOYMENT_TARGET]-(e:Environment) \nWHERE e.name = \"${environment}\" AND dt.name = \"${deploymentTarget}\" AND wl.name = \"${workload}\"\n    MATCH (dt)-[da:HAS_DEPLOYMENT_ASSIGNMENT]->(wv:WORKLOAD_VERSION) \n        WITH  ws,app,dt,da,wl,e,wv ORDER BY wv.createdOn desc limit 1\n            OPTIONAL MATCH (r:Reconciler)<-[:HAS_RECONCILER]-(dt)\n            OPTIONAL MATCH (h:Host)-[:HAS_RECONCILER]->(r)-[:HAS_DEPLOYMENT]->(d:Deployment{gitOpsCommitId: da.gitOpsCommitId})\n            RETURN \n                ws.name AS `Workspace`,\n                app.name AS `Application / use-case`,\n                e.name AS `Environment`,\n                h.name AS `Cluster`,\n                r.name AS `Host`,\n                wl.name AS `Workload`,\n                dt.name AS `Deployment Target`,\n                wv.version AS `Deployed Version`,\n                d.gitOpsCommitId AS `GitOps commit`,\n                d.deployedOn AS `Deployed On`,\n                d.status AS `Status`",
+            "datasource": {
+              "type": "kniepdennis-neo4j-datasource",
+              "uid": "pIf4L-DIk"
+            },
+            "key": "DASHOBOARD-TARGET-KEY",
+            "refId": "A"
+          }
+        ],
+        "title": "New Panel",
+        "type": "table"
+      }
+    ],
+    "schemaVersion": 37,
+    "style": "dark",
+    "tags": [],
+    "templating": {
+      "list": [
+        {
+          "current": {
+            "selected": true,
+            "text": "stage",
+            "value": "stage"
+          },
+          "datasource": {
+            "type": "kniepdennis-neo4j-datasource",
+            "uid": "pIf4L-DIk"
+          },
+          "definition": "Match (e: Environment) return e.name as `environment`",
+          "hide": 0,
+          "includeAll": false,
+          "label": "Environment",
+          "multi": false,
+          "name": "environment",
+          "options": [],
+          "query": {
+            "cypherQuery": "Match (e: Environment) return e.name as `environment`"
+          },
+          "refresh": 1,
+          "regex": "",
+          "skipUrlSync": false,
+          "sort": 0,
+          "type": "query"
+        },
+        {
+          "current": {
+            "selected": true,
+            "text": "uat-test",
+            "value": "uat-test"
+          },
+          "datasource": {
+            "type": "kniepdennis-neo4j-datasource",
+            "uid": "pIf4L-DIk"
+          },
+          "definition": "Match (dt:DeploymentTarget) return dt.name as `deploymentTarget`",
+          "hide": 0,
+          "includeAll": false,
+          "label": "Deployment Target",
+          "multi": false,
+          "name": "deploymentTarget",
+          "options": [],
+          "query": {
+            "cypherQuery": "Match (dt:DeploymentTarget) return dt.name as `deploymentTarget`"
+          },
+          "refresh": 1,
+          "regex": "",
+          "skipUrlSync": false,
+          "sort": 0,
+          "type": "query"
+        },
+        {
+          "current": {
+            "selected": true,
+            "text": "hello",
+            "value": "hello"
+          },
+          "datasource": {
+            "type": "kniepdennis-neo4j-datasource",
+            "uid": "pIf4L-DIk"
+          },
+          "definition": "Match (w: Workload) return w.name as `workload`",
+          "hide": 0,
+          "includeAll": false,
+          "label": "Workload",
+          "multi": false,
+          "name": "workload",
+          "options": [],
+          "query": {
+            "cypherQuery": "Match (w: Workload) return w.name as `workload`"
+          },
+          "refresh": 1,
+          "regex": "",
+          "skipUrlSync": false,
+          "sort": 0,
+          "type": "query"
+        },
+        {
+          "current": {
+            "selected": false,
+            "text": "success",
+            "value": "success"
+          },
+          "datasource": {
+            "type": "kniepdennis-neo4j-datasource",
+            "uid": "pIf4L-DIk"
+          },
+          "definition": "Match (d: Deployment) return distinct d.status as `status`",
+          "hide": 0,
+          "includeAll": false,
+          "label": "Status",
+          "multi": false,
+          "name": "status",
+          "options": [],
+          "query": {
+            "cypherQuery": "Match (d: Deployment) return distinct d.status as `status`"
+          },
+          "refresh": 1,
+          "regex": "",
+          "skipUrlSync": false,
+          "sort": 0,
+          "type": "query"
+        }
+      ]
+    },
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "",
+    "title": "Neo4j-Cluster State",
+    "uid": "w3dqGBvSk",
+    "version": 3,
+    "weekStart": ""
+  }
