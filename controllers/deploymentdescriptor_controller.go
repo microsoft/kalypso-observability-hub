@@ -122,8 +122,8 @@ func (r *DeploymentDescriptorReconciler) Reconcile(ctx context.Context, req ctrl
 		return r.manageFailure(ctx, reqLogger, deploymentDescriptor, err, "Failed to update workload")
 	}
 
-	descriptorDeploymentTraget := deploymentDescriptor.Spec.DeploymentTarget
-	descriptorEnvironment := descriptorDeploymentTraget.Environment
+	descriptorDeploymentTarget := deploymentDescriptor.Spec.DeploymentTarget
+	descriptorEnvironment := descriptorDeploymentTarget.Environment
 
 	// Update Environment
 	env, err := storageClient.UpdateEnvironment(ctx, &pb.Environment{
@@ -136,12 +136,12 @@ func (r *DeploymentDescriptorReconciler) Reconcile(ctx context.Context, req ctrl
 
 	// Update Deployment Target
 	dt, err := storageClient.UpdateDeploymentTarget(ctx, &pb.DeploymentTarget{
-		Name:                 descriptorDeploymentTraget.Name,
-		Description:          descriptorDeploymentTraget.Name,
+		Name:                 descriptorDeploymentTarget.Name,
+		Description:          descriptorDeploymentTarget.Name,
 		EnvironmentId:        env.Id,
 		WorkloadId:           wkl.Id,
 		ManifestsStorageType: v1alpha1.GitStorageType,
-		ManifestsEndpoint:    fmt.Sprintf("%s/%s/%s", descriptorDeploymentTraget.Manifests.Repo, descriptorDeploymentTraget.Manifests.Branch, descriptorDeploymentTraget.Manifests.Path),
+		ManifestsEndpoint:    fmt.Sprintf("%s/%s/%s", descriptorDeploymentTarget.Manifests.Repo, descriptorDeploymentTarget.Manifests.Branch, descriptorDeploymentTarget.Manifests.Path),
 	})
 	if err != nil {
 		return r.manageFailure(ctx, reqLogger, deploymentDescriptor, err, "Failed to update deployment target")
