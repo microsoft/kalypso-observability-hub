@@ -94,7 +94,7 @@ metadata:
 spec:
   subscription: [YOUR AZURE SUBSCRIPTION] (e.g 7be1b9e7-57ca-47ff-b5ab-82e7ccb8c611)  
   tenant: [YOUR AZURE TENANT] (e.g. 16b3c013-d300-468d-ac64-7eda0820b6d3)
-  managedIdentity: [MANAGED IDENTITY ID] (e.g. 02552706-98f9-4301-a473-017752fc430b)
+  managedIdentity: [MANAGED IDENTITY CLIENT ID] (e.g. 02552706-98f9-4301-a473-017752fc430b)
   interval: 10s
 EOF
 ```
