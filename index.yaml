@@ -3,7 +3,7 @@ entries:
   kalypso-observability-hub:
   - apiVersion: v2
     appVersion: 1.0.1-alpha
-    created: "2023-12-09T18:57:15.520197716Z"
+    created: "2024-07-12T18:45:02.83584059Z"
     dependencies:
     - name: api-server
       repository: ""
@@ -16,7 +16,7 @@ entries:
       repository: ""
       version: 1.0.0
     description: A Helm chart for Kubernetes
-    digest: 66d0875a26fbd358f9f6ef2bb65d69b60ff1813bcfaf016e134ea69e19bfa90d
+    digest: 13e880bfddb6be2012009da1a77b5358fffa9eccc9a14c6a21f4a5264acce483
     name: kalypso-observability-hub
     type: application
     urls:
@@ -64,4 +64,4 @@ entries:
     urls:
     - kalypso-observability-hub-0.0.1.tgz
     version: 0.0.1
-generated: "2023-12-09T18:57:15.518201221Z"
+generated: "2024-07-12T18:45:02.834531619Z"
