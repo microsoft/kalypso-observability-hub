@@ -4,7 +4,6 @@ Kalypso Observability Hub is a central storage that contains deployment data wit
 
 ## Motivation
 
-
 Platform and Application Dev teams need a deployment observability solution to perform the following activities:
 
 - monitor what application/service versions are deployed to clusters/hosts in the environments
