@@ -33,12 +33,11 @@ type AzureResourceGraphSpec struct {
 	// +required
 	Tenant string `json:"tenant"`
 
-	//+kubebuilder:validation:MinLength=0
-	// +optional
-	ManagedIdentiy string `json:"managedIdentity"`
-
 	// +required
 	Interval metav1.Duration `json:"interval"`
+
+	// +required
+	SecretRef string `json:"secretRef"`
 }
 
 // AzureResourceGraphStatus defines the observed state of AzureResourceGraph

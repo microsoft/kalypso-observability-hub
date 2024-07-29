@@ -38,8 +38,7 @@ spec:
             properties:
               interval:
                 type: string
-              managedIdentity:
-                minLength: 0
+              secretRef:
                 type: string
               subscription:
                 minLength: 0
@@ -49,6 +48,7 @@ spec:
                 type: string
             required:
             - interval
+            - secretRef
             - subscription
             - tenant
             type: object

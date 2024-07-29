@@ -24,9 +24,11 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -313,7 +315,7 @@ func (r *AzureResourceGraphReconciler) createReconciler(status string, statusMes
 
 	// Create the reconciler spec
 	reconciler := hubv1alpha1.ReconcilerSpec{
-		HostName:             fmt.Sprintf("%s-%s", resourceGroup, clusterName),
+		HostName:             clusterName,
 		ReconcilerName:       reconcilerName,
 		Type:                 reconcilerType,
 		ManifestsStorageType: hubv1alpha1.Git,
@@ -329,7 +331,7 @@ func (r *AzureResourceGraphReconciler) getReconcilersDataFromChildKalypsoObjects
 	var reconcilerData []hubv1alpha1.ReconcilerSpec
 
 	// TODO: identify cluster type (AKS vs conect cluster)
-	res, err := fluxConfigClient.Get(ctx, resourceGroup, "Microsoft.ContainerService", "managedClusters", clusterName, fluxConfigName, nil)
+	res, err := fluxConfigClient.Get(ctx, resourceGroup, "Microsoft.Kubernetes", "connectedClusters", clusterName, fluxConfigName, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -342,22 +344,16 @@ func (r *AzureResourceGraphReconciler) getReconcilersDataFromChildKalypsoObjects
 		}
 
 		//TODO Update Kalypso: name deployment target as workload.deploymentTarget or without workload at all
-		// expected flux resource name format: env.workspace.application.workload-deploymentTarget[.clusterType]
+		// expected flux resource name format: env.workspace.application.workload.deploymentTarget[.clusterType]
 		nameParts := strings.Split(*status.Name, ".")
-		if len(nameParts) < 4 {
+		if len(nameParts) < 5 {
 			continue
 		}
 		environmentName := nameParts[0]
 		workspace := nameParts[1]
 		application := nameParts[2]
-		workloadDeploymentTargetName := nameParts[3]
-
-		nameParts = strings.Split(workloadDeploymentTargetName, "-")
-		if len(nameParts) < 2 {
-			continue
-		}
-		workloadName := nameParts[0]
-		deploymentTargetName := strings.Replace(workloadDeploymentTargetName, workloadName+"-", "", 1)
+		workloadName := nameParts[3]
+		deploymentTargetName := nameParts[4]
 
 		dt, err := storageClient.GetDeploymentTarget(ctx, &pb.DeploymentTargetSearch{
 			WorkloadName:         workloadName,
@@ -367,6 +363,8 @@ func (r *AzureResourceGraphReconciler) getReconcilersDataFromChildKalypsoObjects
 			ApplicationName:      application,
 		})
 		if err != nil {
+			//log  workspace, application, workloadName and deploymentTargetName
+			logger.Error(err, "Failed to get deployment target", "workspace", workspace, "application", application, "workloadName", workloadName, "deploymentTargetName", deploymentTargetName)
 			continue
 		}
 
@@ -426,8 +424,18 @@ func (r *AzureResourceGraphReconciler) getStatusMessage(complianceState string, 
 
 // Get Acxure Credentials
 func (r *AzureResourceGraphReconciler) getAzureCredentials(arg *hubv1alpha1.AzureResourceGraph) (*azidentity.DefaultAzureCredential, error) {
+	// find secret by name
+	secret := &corev1.Secret{}
+	err := r.Get(context.TODO(), types.NamespacedName{Name: arg.Spec.SecretRef, Namespace: arg.Namespace}, secret)
+	if err != nil {
+		return nil, err
+	}
+
+	//set the environment variables from the secret
 	os.Setenv("AZURE_TENANT_ID", arg.Spec.Tenant)
-	os.Setenv("AZURE_CLIENT_ID", arg.Spec.ManagedIdentiy)
+	os.Setenv("AZURE_SUBSCRIPTION_ID", arg.Spec.Subscription)
+	os.Setenv("AZURE_CLIENT_SECRET", string(secret.Data["AZURE_CLIENT_SECRET"]))
+	os.Setenv("AZURE_CLIENT_ID", string(secret.Data["AZURE_CLIENT_ID"]))
 
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
