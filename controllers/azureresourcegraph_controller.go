@@ -368,11 +368,7 @@ func (r *AzureResourceGraphReconciler) getReconcilersDataFromChildKalypsoObjects
 			continue
 		}
 
-		// INFO    Failed to get deployment target {"controller": "azureresourcegraph", "controllerGroup": "hub.kalypso.io", "controllerKind": "AzureResourceGraph", "AzureResourceGraph": {"name":"azureresourcegraph-sample","namespace":"hub"}, "namespace": "hub", "name": "azureresourcegraph-sample", "reconcileID": "0b03a1e8-c3cb-4725-b36b-c7095f11dfab",
-		//  "workspace": "dm", "application": "dm", "workloadName": "control-tower", "deploymentTargetName": "control-tower-dev"}
-
 		manifestsEndpoint := dt.ManifestsEndpoint
-		// manifestsEndpoint := "something"
 		statusMessage := ""
 		gitOpsCommitId := ""
 		for _, statusCondition := range status.StatusConditions {
@@ -440,9 +436,6 @@ func (r *AzureResourceGraphReconciler) getAzureCredentials(arg *hubv1alpha1.Azur
 	os.Setenv("AZURE_SUBSCRIPTION_ID", arg.Spec.Subscription)
 	os.Setenv("AZURE_CLIENT_SECRET", string(secret.Data["AZURE_CLIENT_SECRET"]))
 	os.Setenv("AZURE_CLIENT_ID", string(secret.Data["AZURE_CLIENT_ID"]))
-
-	// os.Setenv("AZURE_TENANT_ID", arg.Spec.Tenant)
-	// os.Setenv("AZURE_CLIENT_ID", arg.Spec.ManagedIdentiy)
 
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
