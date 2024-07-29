@@ -1,18 +1,9 @@
 apiVersion: hub.kalypso.io/v1alpha1
 kind: AzureResourceGraph
 metadata:
-  labels:
-    app.kubernetes.io/name: azureresourcegraph
-    app.kubernetes.io/instance: azureresourcegraph-sample
-    app.kubernetes.io/part-of: kalypso-observability-hub
-    app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/created-by: kalypso-observability-hub
-  name: azureresourcegraph-sample
+  name: azureresourcegraph
 spec:
-  subscription: "7be1b9e7-57ca-47ff-b5ab-82e7ccb8c611"
-  
-  tenant: "16b3c013-d300-468d-ac64-7eda0820b6d3"
-  
-  managedIdentity: "02552706-98f9-4301-a473-017752fc430b"
-  
+  subscription: "7be1b9e7-57ca-47ff-b5ab-82e7ccb8c611"  
+  tenant: "16b3c013-d300-468d-ac64-7eda0820b6d3"  
+  managedIdentity: "02552706-98f9-4301-a473-017752fc430b"  
   interval: 10s
