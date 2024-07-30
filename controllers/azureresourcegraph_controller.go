@@ -306,6 +306,7 @@ func (r *AzureResourceGraphReconciler) getReconcilersData(ctx context.Context, f
 func (r *AzureResourceGraphReconciler) createReconciler(status string, statusMessage string, gitOpsCommitId string,
 	resourceGroup string, clusterName string, reconcilerName string, manifestsEndpoint string, reconcilerType hubv1alpha1.ReconcilerType) hubv1alpha1.ReconcilerSpec {
 	reconcilerStatus := r.translateComplianceState(status)
+	clusterName = strings.ToLower(clusterName)
 
 	deployment := hubv1alpha1.Deployment{
 		GitOpsCommitId: gitOpsCommitId,
