@@ -365,7 +365,7 @@ func (r *AzureResourceGraphReconciler) getReconcilersDataFromChildKalypsoObjects
 		})
 		if err != nil {
 			//log  workspace, application, workloadName and deploymentTargetName
-			logger.Error(err, "Failed to get deployment target", "workspace", workspace, "application", application, "workloadName", workloadName, "deploymentTargetName", deploymentTargetName)
+			logger.Info("Could not find deployment target", "workspace", workspace, "application", application, "workloadName", workloadName, "deploymentTargetName", deploymentTargetName)
 			continue
 		}
 
