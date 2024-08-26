@@ -331,10 +331,12 @@ func (r *AzureResourceGraphReconciler) createReconciler(status string, statusMes
 func (r *AzureResourceGraphReconciler) getReconcilersDataFromChildKalypsoObjects(ctx context.Context, storageClient grpcClient.ObservabilityStorageGrpcClient, resourceGroup string, clusterName string, fluxConfigName string, fluxConfigClient *armkubernetesconfiguration.FluxConfigurationsClient, fluxConfigs []interface{}, logger logr.Logger) ([]hubv1alpha1.ReconcilerSpec, error) {
 	var reconcilerData []hubv1alpha1.ReconcilerSpec
 
-	// TODO: identify cluster type (AKS vs conect cluster)
 	res, err := fluxConfigClient.Get(ctx, resourceGroup, "Microsoft.Kubernetes", "connectedClusters", clusterName, fluxConfigName, nil)
 	if err != nil {
-		return nil, err
+		res, err = fluxConfigClient.Get(ctx, resourceGroup, "Microsoft.ContainerService", "managedClusters", clusterName, fluxConfigName, nil)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	fluxConfigurationDetal := res.FluxConfiguration
