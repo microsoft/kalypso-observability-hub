@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -215,6 +216,9 @@ func (r *DeploymentDescriptorReconciler) getCommitFromFluxKustomization(deployme
 
 	//get the commit from the flux kustomization
 	commit := fluxKustomization.Status.LastAppliedRevision
+
+	//remove from commit everything before @ including it
+	commit = commit[strings.LastIndex(commit, "@")+1:]
 
 	return &commit, nil
 
