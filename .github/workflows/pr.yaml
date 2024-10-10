@@ -85,30 +85,6 @@ jobs:
           # Specify yes to show detailed HTTP status for checked links.
           use-verbose-mode: 'yes'
 
-  secrets-detection:
-    name: Secrets Detection
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: "0"
-
-      - name: Upload SARIF report to Workflow Artifacts
-        uses: actions/upload-artifact@v3
-        if: always() && steps.gitleaks.outputs.exitcode != 0
-        with:
-          name: gitleaks
-          path: |
-            ${{ steps.gitleaks.outputs.report }}
-      
-      - name: Upload SARIF report to Code Scanning service
-        if: always() && steps.gitleaks.outputs.exitcode != 0
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: ${{ steps.gitleaks.outputs.report }}
-          category: gitleaks
-
   spell-check:
     name: Code Spell Checker
     runs-on: ubuntu-latest
