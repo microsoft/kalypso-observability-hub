@@ -61,7 +61,7 @@ create table if not exists environment (
 
 create table if not exists deployment_target(
     id serial primary key,
-    name varchar(30) not null,
+    name varchar(100) not null,
     description text,
     workload_id int not null references workload(id),
     environment_id int not null references environment(id),
