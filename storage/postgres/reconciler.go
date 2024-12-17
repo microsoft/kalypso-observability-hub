@@ -51,3 +51,24 @@ func (r *Reconciler) getByNaturalKey(conn *sql.DB) (Entity, error) {
 	}
 	return r, nil
 }
+
+var _ QueryFunc = GetByManifestsEndpoint
+
+func GetByManifestsEndpoint(conn *sql.DB, args ...interface{}) ([]Entity, error) {
+
+	rows, err := conn.Query(`SELECT id, name, host_id, description, reconciler_type, labels, manifests_storage_type, manifests_endpoint FROM reconciler WHERE manifests_endpoint like "$1%"`, args[0])
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var reconcilers []Entity
+	for rows.Next() {
+		var reconciler Reconciler
+		err := rows.Scan(&reconciler.Id, &reconciler.Name, &reconciler.HostId, &reconciler.Description, &reconciler.ReconcilerType, &reconciler.Labels, &reconciler.ManifestsStorageType, &reconciler.ManifestsEndpoint)
+		if err != nil {
+			return nil, err
+		}
+		reconcilers = append(reconcilers, &reconciler)
+	}
+	return reconcilers, nil
+}

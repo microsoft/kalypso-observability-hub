@@ -360,6 +360,63 @@ func (s *storageApiServer) GetDeploymentTarget(ctx context.Context, deploymentTa
 	}, nil
 }
 
+// Get DeploymentState
+func (s *storageApiServer) GetDeploymentState(ctx context.Context, deploymentStateRequest *pb.DeploymentStateRequest) (*pb.DeploymentState, error) {
+	log.Printf("Received DeploymentStateRequest: %v", deploymentStateRequest)
+
+	//Get Reconcilers by ManifestsEndpoint
+	reconcilers, err := s.dbClient.Query(ctx, db.GetByManifestsEndpoint, deploymentStateRequest.ManifestsEndpoint)
+	if err != nil {
+		return nil, err
+	}
+	var deployment_state *pb.DeploymentState = &pb.DeploymentState{
+		TotalSubscribers:           0,
+		TotalSucceededSubscribers:  0,
+		TotalFailedSubscribers:     0,
+		TotalInProgressSubscribers: 0,
+		SucceededSubscribers:       []*pb.Subscriber{},
+		FailedSubscribers:          []*pb.Subscriber{},
+		InProgressSubscribers:      []*pb.Subscriber{},
+	}
+
+	for _, reconciler := range reconcilers {
+		deployment_state.TotalSubscribers++
+		reconciler_entity := reconciler.(*db.Reconciler)
+		//Get Deployments by ReconcilerId
+		deployments_entities, err := s.dbClient.Query(ctx, db.GetByReconcilerId, reconciler_entity.Id)
+		if err != nil {
+			return nil, err
+		}
+		//iterate over deployments_entities
+		for _, deployment := range deployments_entities {
+			deployment_entity := deployment.(*db.Deployment)
+			if deployment_entity.GitopsCommitId == deploymentStateRequest.CommitId {
+				subscriber := &pb.Subscriber{
+					Name:          reconciler_entity.Name,
+					StatusMessage: deployment_entity.StatusMessage,
+				}
+				if deployment_entity.Status == "success" {
+					deployment_state.TotalSucceededSubscribers++
+					deployment_state.SucceededSubscribers = append(deployment_state.SucceededSubscribers, subscriber)
+				}
+				if deployment_entity.Status == "failure" {
+					deployment_state.TotalFailedSubscribers++
+					deployment_state.FailedSubscribers = append(deployment_state.FailedSubscribers, subscriber)
+				}
+				if deployment_entity.Status == "in_progress" {
+					deployment_state.TotalInProgressSubscribers++
+					deployment_state.InProgressSubscribers = append(deployment_state.InProgressSubscribers, subscriber)
+				}
+				break
+			}
+		}
+
+	}
+
+	return deployment_state, nil
+
+}
+
 func newStorageApiServer(dbClient db.DBClient) *storageApiServer {
 	return &storageApiServer{dbClient: dbClient}
 }

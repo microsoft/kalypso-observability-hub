@@ -15,10 +15,13 @@ type Entity interface {
 	getByNaturalKey(conn *sql.DB) (Entity, error)
 }
 
+type QueryFunc func(conn *sql.DB, args ...interface{}) ([]Entity, error)
+
 type DBClient interface {
 	Update(ctx context.Context, enity Entity) (Entity, error)
 	Get(ctx context.Context, enity Entity) (Entity, error)
 	GetByNaturalKey(ctx context.Context, enity Entity) (Entity, error)
+	Query(ctx context.Context, query QueryFunc, args ...interface{}) ([]Entity, error)
 }
 
 type postgresClient struct {
@@ -82,4 +85,18 @@ func (c *postgresClient) GetByNaturalKey(ctx context.Context, entity Entity) (En
 		return nil, err
 	}
 	return entity, nil
+}
+
+func (c *postgresClient) Query(ctx context.Context, query QueryFunc, args ...interface{}) ([]Entity, error) {
+	conn, err := c.getConnection()
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+	entities, err := query(conn, args...)
+	if err != nil {
+		log.Printf("fail to query entities: %v", err)
+		return nil, err
+	}
+	return entities, nil
 }
