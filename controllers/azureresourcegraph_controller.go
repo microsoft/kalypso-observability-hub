@@ -273,11 +273,6 @@ func (r *AzureResourceGraphReconciler) getReconcilersData(ctx context.Context, f
 			endpoint := repo + "/" + branch + "/" + path
 
 			sourceSyncedCommitId := propeties["sourceSyncedCommitId"]
-			// gitOpsCommitId := ""
-			// if sourceSyncedCommitId != nil {
-			// 	// convert gitopscommitid dev@sha1:c090794d23c4834376d0dbf998889c03b93eb2db to dev/c090794d23c4834376d0dbf998889c03b93eb2db
-			// 	gitOpsCommitId = strings.Replace(sourceSyncedCommitId.(string), "@sha1:", "/", 1)
-			// }
 			gitOpsCommitId := sourceSyncedCommitId.(string)
 
 			statusMessage := ""
@@ -379,7 +374,7 @@ func (r *AzureResourceGraphReconciler) getReconcilersDataFromChildKalypsoObjects
 				statusConditionMessage := *statusCondition.Message
 				shaIndex := strings.Index(statusConditionMessage, "sha1:")
 				if shaIndex > 0 {
-					gitOpsCommitId = environmentName + "@" + statusConditionMessage[shaIndex:shaIndex+45]
+					gitOpsCommitId = statusConditionMessage[shaIndex : shaIndex+45]
 				}
 				statusMessage += statusConditionMessage
 			}

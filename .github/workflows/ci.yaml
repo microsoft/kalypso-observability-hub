@@ -44,7 +44,7 @@ jobs:
           tags: ghcr.io/microsoft/kalypso-observability-hub-grpc-api-server:${{ env.VERSION }}, ghcr.io/microsoft/kalypso-observability-hub-grpc-api-server:latest        
 
       - name: Upload Version
-        uses: actions/upload-artifact@v2.2.2
+        uses: actions/upload-artifact@v4
         with:
           name: version
           path: ${{ github.workspace }}/VERSION
