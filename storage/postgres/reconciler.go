@@ -56,7 +56,7 @@ var _ QueryFunc = GetByManifestsEndpoint
 
 func GetByManifestsEndpoint(conn *sql.DB, args ...interface{}) ([]Entity, error) {
 
-	rows, err := conn.Query(`SELECT id, name, host_id, description, reconciler_type, labels, manifests_storage_type, manifests_endpoint FROM reconciler WHERE manifests_endpoint like "$1%"`, args[0])
+	rows, err := conn.Query(`SELECT id, name, host_id, description, reconciler_type, labels, manifests_storage_type, manifests_endpoint FROM reconciler WHERE manifests_endpoint like '$1%'`, args[0])
 	if err != nil {
 		return nil, err
 	}
