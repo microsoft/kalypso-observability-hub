@@ -5,7 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"net"
+	"net/http"
 	"os"
 	"strconv"
 
@@ -13,6 +13,9 @@ import (
 	db "github.com/microsoft/kalypso-observability-hub/storage/postgres"
 	"google.golang.org/grpc"
 
+	"github.com/gin-gonic/gin"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
 )
@@ -37,6 +40,8 @@ type storageApiServer struct {
 
 // make sure that the server implements the interface
 var _ pb.StorageApiServer = (*storageApiServer)(nil)
+
+var server *storageApiServer
 
 func (s *storageApiServer) UpdateWorkspace(ctx context.Context, workspace *pb.Workspace) (*pb.Workspace, error) {
 	log.Printf("Received Workspace: %v", workspace)
@@ -364,12 +369,7 @@ func (s *storageApiServer) GetDeploymentTarget(ctx context.Context, deploymentTa
 func (s *storageApiServer) GetDeploymentState(ctx context.Context, deploymentStateRequest *pb.DeploymentStateRequest) (*pb.DeploymentState, error) {
 	log.Printf("Received DeploymentStateRequest: %v", deploymentStateRequest)
 
-	//Get Reconcilers by ManifestsEndpoint
-	reconcilers, err := s.dbClient.Query(ctx, db.GetByManifestsEndpoint, deploymentStateRequest.ManifestsEndpoint)
-	if err != nil {
-		return nil, err
-	}
-	var deployment_state *pb.DeploymentState = &pb.DeploymentState{
+	deployment_state := &pb.DeploymentState{
 		TotalSubscribers:           0,
 		TotalSucceededSubscribers:  0,
 		TotalFailedSubscribers:     0,
@@ -379,35 +379,37 @@ func (s *storageApiServer) GetDeploymentState(ctx context.Context, deploymentSta
 		InProgressSubscribers:      []*pb.Subscriber{},
 	}
 
-	for _, reconciler := range reconcilers {
-		deployment_state.TotalSubscribers++
-		reconciler_entity := reconciler.(*db.Reconciler)
-		//Get Deployments by ReconcilerId
-		deployments_entities, err := s.dbClient.Query(ctx, db.GetByReconcilerId, reconciler_entity.Id)
+	//Get Reconcilers by ManifestsEndpoint
+	total_subscribers, err := s.dbClient.Query(ctx, db.CountByManifestsEndpoint, deploymentStateRequest.ManifestsEndpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	deployment_state.TotalSubscribers = total_subscribers.(int32)
+
+	if deployment_state.TotalSubscribers > 0 {
+		//Get DeploymentStatuses by ManifestsEndpoint and GitopsCommitId
+		deployment_statuses, err := s.dbClient.Query(ctx, db.CountByStatuses, deploymentStateRequest.ManifestsEndpoint, deploymentStateRequest.CommitId)
 		if err != nil {
 			return nil, err
 		}
-		//iterate over deployments_entities
-		for _, deployment := range deployments_entities {
-			deployment_entity := deployment.(*db.Deployment)
-			if deployment_entity.GitopsCommitId == deploymentStateRequest.CommitId {
+
+		status := deployment_statuses.(db.StatusStats)
+		deployment_state.TotalSucceededSubscribers = status.Success
+		deployment_state.TotalFailedSubscribers = status.Failed
+		deployment_state.TotalInProgressSubscribers = status.InProgress
+
+		if deployment_state.TotalFailedSubscribers > 0 {
+			failed_deployments, err := s.dbClient.Query(ctx, db.GetByStatus, deploymentStateRequest.ManifestsEndpoint, deploymentStateRequest.CommitId, "failure")
+			if err != nil {
+				return nil, err
+			}
+			for _, deployment := range failed_deployments.([]map[string]string) {
 				subscriber := &pb.Subscriber{
-					Name:          reconciler_entity.Name,
-					StatusMessage: deployment_entity.StatusMessage,
+					Name:          deployment["name"],
+					StatusMessage: deployment["status_message"],
 				}
-				if deployment_entity.Status == "success" {
-					deployment_state.TotalSucceededSubscribers++
-					deployment_state.SucceededSubscribers = append(deployment_state.SucceededSubscribers, subscriber)
-				}
-				if deployment_entity.Status == "failure" {
-					deployment_state.TotalFailedSubscribers++
-					deployment_state.FailedSubscribers = append(deployment_state.FailedSubscribers, subscriber)
-				}
-				if deployment_entity.Status == "in_progress" {
-					deployment_state.TotalInProgressSubscribers++
-					deployment_state.InProgressSubscribers = append(deployment_state.InProgressSubscribers, subscriber)
-				}
-				break
+				deployment_state.FailedSubscribers = append(deployment_state.FailedSubscribers, subscriber)
 			}
 		}
 
@@ -453,25 +455,65 @@ func readConfigValuesFromEnv() {
 
 }
 
+func getDeploymentStateHandler(c *gin.Context) {
+	var req pb.DeploymentStateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	resp, err := server.GetDeploymentState(c, &req)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, resp)
+
+}
+
 func main() {
 	flag.Parse()
 	readConfigValuesFromEnv()
 
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", portInt))
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
+	// lis, err := net.Listen("tcp", fmt.Sprintf(":%d", portInt))
+	// if err != nil {
+	// 	log.Fatalf("failed to listen: %v", err)
+	// }
 	grpcServer := grpc.NewServer()
 
 	grpc_health_v1.RegisterHealthServer(grpcServer, health.NewServer())
 
 	dbClient := db.NewPostgresClient(*postgresHost, postgresPortInt, *postgresUser, *postgresPassword, *postgresDbName, *postgresSslmode)
-	pb.RegisterStorageApiServer(grpcServer, newStorageApiServer(dbClient))
+	server = newStorageApiServer(dbClient)
+	pb.RegisterStorageApiServer(grpcServer, server)
+	router := gin.Default()
+
+	router.POST("/deployment_state", getDeploymentStateHandler)
+
 	//log starting the server
 	log.Printf("Starting server on port %d", portInt)
 
-	err = grpcServer.Serve(lis)
-	if err != nil {
+	// err = grpcServer.Serve(lis)
+	// if err != nil {
+	// 	log.Fatalf("failed to serve: %v", err)
+	// }
+
+	httpServer := &http.Server{
+		Addr: fmt.Sprintf(":%d", portInt),
+		Handler: h2c.NewHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Detect if it's a gRPC request or HTTP request
+			if r.ProtoMajor == 2 && r.Header.Get("content-type") == "application/grpc" {
+				grpcServer.ServeHTTP(w, r)
+			} else {
+				router.ServeHTTP(w, r)
+			}
+		}), &http2.Server{}),
+	}
+
+	log.Println("Serving gRPC and HTTP on :50051")
+
+	if err := httpServer.ListenAndServe(); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
 

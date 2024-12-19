@@ -957,7 +957,7 @@ type DeploymentState struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	TotalSubscribers           int32         `protobuf:"varint,1,opt,name=total_subscribers,json=totalSubscribers,proto3" json:"total_subscribers,omitempty"`
+	TotalSubscribers           int32         `protobuf:"varint,1,opt,name=total_subscribers,json=totalSubscribers,proto3" json:"total_subscribers"`
 	TotalSucceededSubscribers  int32         `protobuf:"varint,2,opt,name=total_succeeded_subscribers,json=totalSucceededSubscribers,proto3" json:"total_succeeded_subscribers,omitempty"`
 	TotalFailedSubscribers     int32         `protobuf:"varint,3,opt,name=total_failed_subscribers,json=totalFailedSubscribers,proto3" json:"total_failed_subscribers,omitempty"`
 	TotalInProgressSubscribers int32         `protobuf:"varint,4,opt,name=total_in_progress_subscribers,json=totalInProgressSubscribers,proto3" json:"total_in_progress_subscribers,omitempty"`

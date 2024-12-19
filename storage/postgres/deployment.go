@@ -44,26 +44,3 @@ func (d *Deployment) getByNaturalKey(conn *sql.DB) (Entity, error) {
 	}
 	return d, nil
 }
-
-// GetByReconcilerId
-var _ QueryFunc = GetByReconcilerId
-
-func GetByReconcilerId(conn *sql.DB, args ...interface{}) ([]Entity, error) {
-
-	rows, err := conn.Query(`SELECT id, gitops_commit_id, reconciler_id, status, status_message FROM deployment WHERE reconciler_id=$1 order by created_on desc`, args[0])
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var deployments []Entity
-	for rows.Next() {
-		var d Deployment
-		err := rows.Scan(&d.Id, &d.GitopsCommitId, &d.ReconcilerId, &d.Status, &d.StatusMessage)
-		if err != nil {
-			return nil, err
-		}
-		deployments = append(deployments, &d)
-	}
-	return deployments, nil
-}
