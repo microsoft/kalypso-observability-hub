@@ -171,7 +171,7 @@ func TestGetDeploymentState(t *testing.T) {
 		CommitId:          "sha1:a97f94d3f3ede63d08d58ae4cf9f3262d7679c4f",
 	})
 	// Print the deployment state
-	t.Errorf("DeploymentState: %v", *deployment_state)
+	t.Logf("DeploymentState: %v", *deployment_state)
 
 	if err != nil {
 		t.Errorf("GetDeploymentState() error = %v", err)
