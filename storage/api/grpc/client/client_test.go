@@ -162,3 +162,19 @@ func TestUpdateDeployment(t *testing.T) {
 		return
 	}
 }
+
+// Test GetDeploymentState
+func TestGetDeploymentState(t *testing.T) {
+	client := NewObservabilityStorageGrpcClient(*serverAddr)
+	deployment_state, err := client.GetDeploymentState(context.Background(), &pb.DeploymentStateRequest{
+		ManifestsEndpoint: "https://github.com/Org/data-ingestion/dev%",
+		CommitId:          "sha1:a97f94d3f3ede63d08d58ae4cf9f3262d7679c4f",
+	})
+	// Print the deployment state
+	t.Logf("DeploymentState: %v", *deployment_state)
+
+	if err != nil {
+		t.Errorf("GetDeploymentState() error = %v", err)
+		return
+	}
+}

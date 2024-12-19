@@ -93,6 +93,25 @@ message DeploymentTargetSearch {
 	string environment_name = 5;
 }
 
+message DeploymentStateRequest {	
+	string manifests_endpoint = 1;
+	string commit_id = 2;
+}
+
+message DeploymentState {	
+	int32 total_subscribers = 1;
+	int32 total_succeeded_subscribers = 2;
+	int32 total_failed_subscribers = 3;
+	int32 total_in_progress_subscribers = 4;
+	repeated Subscriber succeeded_subscribers = 5;
+	repeated Subscriber failed_subscribers = 6;
+	repeated Subscriber in_progress_subscribers = 7;
+}
+
+message Subscriber {
+	string name = 1;
+	string status_message = 2;
+}
 
 service StorageApi {
     rpc UpdateWorkspace(Workspace) returns (Workspace) {}
@@ -106,4 +125,5 @@ service StorageApi {
     rpc UpdateReconciler(Reconciler) returns (Reconciler) {}
     rpc UpdateDeployment(Deployment) returns (Deployment) {}
 	rpc GetDeploymentTarget(DeploymentTargetSearch) returns (DeploymentTarget) {}
+	rpc GetDeploymentState(DeploymentStateRequest) returns (DeploymentState) {}
 }

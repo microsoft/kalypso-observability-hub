@@ -23,6 +23,7 @@ type ObservabilityStorageGrpcClient interface {
 	UpdateReconciler(ctx context.Context, in *pb.Reconciler) (*pb.Reconciler, error)
 	UpdateDeployment(ctx context.Context, in *pb.Deployment) (*pb.Deployment, error)
 	GetDeploymentTarget(ctx context.Context, in *pb.DeploymentTargetSearch) (*pb.DeploymentTarget, error)
+	GetDeploymentState(ctx context.Context, in *pb.DeploymentStateRequest) (*pb.DeploymentState, error)
 }
 
 type observabilityStorageGrpcClient struct {
@@ -209,4 +210,20 @@ func (c *observabilityStorageGrpcClient) GetDeploymentTarget(ctx context.Context
 		return nil, err
 	}
 	return dt, nil
+}
+
+// GetDeploymentState
+func (c *observabilityStorageGrpcClient) GetDeploymentState(ctx context.Context, in *pb.DeploymentStateRequest) (*pb.DeploymentState, error) {
+	conn, err := c.getConnection()
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+	client := pb.NewStorageApiClient(conn)
+
+	ds, err := client.GetDeploymentState(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return ds, nil
 }
