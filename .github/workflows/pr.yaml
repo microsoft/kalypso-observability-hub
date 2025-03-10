@@ -65,7 +65,7 @@ jobs:
 
       - name: Archive report
         if: ${{ always() && steps.markdownlint.conclusion == 'failure' }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: markdownlint report
           path: markdown-report.txt
