@@ -1,5 +1,7 @@
 # Deployment Observability Hub
 
+[![CI](https://github.com/microsoft/kalypso-observability-hub/actions/workflows/ci.yaml/badge.svg)](https://github.com/microsoft/kalypso-observability-hub/actions/workflows/ci.yaml)
+
 Deployment Observability Hub is a central storage that contains deployment data with historical information on workload versions and their deployment state across hosts. This data is used by dashboards and alerts for the deployment monitoring purposes, by the CD pipelines, implementing progressive rollout across environments and by various external systems that make decisions basing on the deployment data.
 
 ## Motivation
