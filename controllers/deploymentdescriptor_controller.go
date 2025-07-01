@@ -32,7 +32,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1beta2"
-	"github.com/microsoft/kalypso-observability-hub/api/v1alpha1"
 	hubv1alpha1 "github.com/microsoft/kalypso-observability-hub/api/v1alpha1"
 	grpcClient "github.com/microsoft/kalypso-observability-hub/storage/api/grpc/client"
 	pb "github.com/microsoft/kalypso-observability-hub/storage/api/grpc/proto"
@@ -79,7 +78,7 @@ func (r *DeploymentDescriptorReconciler) Reconcile(ctx context.Context, req ctrl
 	}
 
 	// Check if the resource is being deleted
-	if !deploymentDescriptor.ObjectMeta.DeletionTimestamp.IsZero() {
+	if !deploymentDescriptor.DeletionTimestamp.IsZero() {
 		return ctrl.Result{}, nil
 	}
 
@@ -115,7 +114,7 @@ func (r *DeploymentDescriptorReconciler) Reconcile(ctx context.Context, req ctrl
 	wkl, err := storageClient.UpdateWorkload(ctx, &pb.Workload{
 		Name:              descriptorWorkload.Name,
 		Description:       descriptorWorkload.Name,
-		SourceStorageType: v1alpha1.GitStorageType,
+		SourceStorageType: hubv1alpha1.GitStorageType,
 		SourceEndpoint:    fmt.Sprintf("%s/%s/%s", descriptorWorkload.Source.Repo, descriptorWorkload.Source.Branch, descriptorWorkload.Source.Path),
 		ApplicationId:     app.Id,
 	})
@@ -141,7 +140,7 @@ func (r *DeploymentDescriptorReconciler) Reconcile(ctx context.Context, req ctrl
 		Description:          descriptorDeploymentTarget.Name,
 		EnvironmentId:        env.Id,
 		WorkloadId:           wkl.Id,
-		ManifestsStorageType: v1alpha1.GitStorageType,
+		ManifestsStorageType: hubv1alpha1.GitStorageType,
 		ManifestsEndpoint:    fmt.Sprintf("%s/%s/%s", descriptorDeploymentTarget.Manifests.Repo, descriptorDeploymentTarget.Manifests.Branch, descriptorDeploymentTarget.Manifests.Path),
 	})
 	if err != nil {
@@ -196,12 +195,12 @@ func (r *DeploymentDescriptorReconciler) getCommitFromFluxKustomization(deployme
 	//get the flux kustomization name from the deployment descriptor
 	fluxKustomizationName := deploymentDescriptor.Labels[FluxKustomizationNameLabel]
 	if fluxKustomizationName == "" {
-		return nil, fmt.Errorf("Flux Kustomization name not found in the deployment descriptor")
+		return nil, fmt.Errorf("flux Kustomization name not found in the deployment descriptor")
 	}
 
 	fluxKustomizationNamespace := deploymentDescriptor.Labels[FluxKustomizationNamespaceLabel]
 	if fluxKustomizationNamespace == "" {
-		return nil, fmt.Errorf("Flux Kustomization namespace not found in the deployment descriptor")
+		return nil, fmt.Errorf("flux Kustomization namespace not found in the deployment descriptor")
 	}
 
 	//get the flux kustomization

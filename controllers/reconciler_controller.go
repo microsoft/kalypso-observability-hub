@@ -70,7 +70,7 @@ func (r *ReconcilerReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	}
 
 	// Check if the resource is being deleted
-	if !reconciler.ObjectMeta.DeletionTimestamp.IsZero() {
+	if !reconciler.DeletionTimestamp.IsZero() {
 		return ctrl.Result{}, nil
 	}
 

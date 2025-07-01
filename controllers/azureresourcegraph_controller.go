@@ -78,7 +78,7 @@ func (r *AzureResourceGraphReconciler) Reconcile(ctx context.Context, req ctrl.R
 	}
 
 	// Check if the resource is being deleted
-	if !arg.ObjectMeta.DeletionTimestamp.IsZero() {
+	if !arg.DeletionTimestamp.IsZero() {
 		return ctrl.Result{}, nil
 	}
 
@@ -430,10 +430,18 @@ func (r *AzureResourceGraphReconciler) getAzureCredentials(arg *hubv1alpha1.Azur
 	}
 
 	//set the environment variables from the secret
-	os.Setenv("AZURE_TENANT_ID", arg.Spec.Tenant)
-	os.Setenv("AZURE_SUBSCRIPTION_ID", arg.Spec.Subscription)
-	os.Setenv("AZURE_CLIENT_SECRET", string(secret.Data["AZURE_CLIENT_SECRET"]))
-	os.Setenv("AZURE_CLIENT_ID", string(secret.Data["AZURE_CLIENT_ID"]))
+	if err := os.Setenv("AZURE_TENANT_ID", arg.Spec.Tenant); err != nil {
+		return nil, err
+	}
+	if err := os.Setenv("AZURE_SUBSCRIPTION_ID", arg.Spec.Subscription); err != nil {
+		return nil, err
+	}
+	if err := os.Setenv("AZURE_CLIENT_SECRET", string(secret.Data["AZURE_CLIENT_SECRET"])); err != nil {
+		return nil, err
+	}
+	if err := os.Setenv("AZURE_CLIENT_ID", string(secret.Data["AZURE_CLIENT_ID"])); err != nil {
+		return nil, err
+	}
 
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
