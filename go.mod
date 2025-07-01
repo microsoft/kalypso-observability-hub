@@ -1,6 +1,8 @@
 module github.com/microsoft/kalypso-observability-hub
 
-go 1.19
+go 1.23.0
+
+toolchain go1.23.10
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.6.0
