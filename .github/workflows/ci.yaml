@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  VERSION: ${{ vars.MAJOR_VERSION }}.${{ vars.MINOR_VERSION }}.${{ vars.HF_VERSION }}-${{ github.run_number }}
+  VERSION: ${{ vars.MAJOR_VERSION }}.${{ vars.MINOR_VERSION }}.${{ vars.HF_VERSION }}
 
 jobs:
   quality-check:
