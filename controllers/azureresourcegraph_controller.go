@@ -38,6 +38,7 @@ import (
 	azidentity "github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	armkubernetesconfiguration "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/kubernetesconfiguration/armkubernetesconfiguration"
 	armresourcegraph "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resourcegraph/armresourcegraph"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	hubv1alpha1 "github.com/microsoft/kalypso-observability-hub/api/v1alpha1"
 	grpcClient "github.com/microsoft/kalypso-observability-hub/storage/api/grpc/client"
 	pb "github.com/microsoft/kalypso-observability-hub/storage/api/grpc/proto"
@@ -93,20 +94,25 @@ func (r *AzureResourceGraphReconciler) Reconcile(ctx context.Context, req ctrl.R
 		return r.manageFailure(ctx, reqLogger, arg, err, "Failed to get Azure Resource Graph client")
 	}
 
-	fluxConfigs, err := r.getFluxConfigurations(ctx, argClient, arg.Spec.Subscription)
+	//create arm client for flux configurations
+	armClient, err := r.getARMClient(cred, arg.Spec.Subscription)
 	if err != nil {
-		return r.manageFailure(ctx, reqLogger, arg, err, "Failed to get Flux Configurations")
+		return r.manageFailure(ctx, reqLogger, arg, err, "Failed to get Azure Resource Manager client")
 	}
 
-	fluxConfigClient, err := r.getFluxConfigClient(cred, arg.Spec.Subscription)
+	// Get GitOps Reconcilers Data
+	reconcilersData, err := r.getGitOpsReconcilersData(ctx, cred, argClient, arg.Spec.Subscription, reqLogger)
 	if err != nil {
-		return r.manageFailure(ctx, reqLogger, arg, err, "Failed to get Flux Config Client")
+		return r.manageFailure(ctx, reqLogger, arg, err, "Failed to get GitOps Reconcilers Data")
 	}
 
-	reconcilersData, err := r.getReconcilersData(ctx, fluxConfigClient, fluxConfigs.Data.([]interface{}), reqLogger)
+	// Add WO Reconcilers Data
+	woReconcilersData, err := r.getWoReconcilersData(ctx, argClient, armClient, arg.Spec.Subscription, reqLogger)
 	if err != nil {
-		return r.manageFailure(ctx, reqLogger, arg, err, "Failed to get Reconcilers Data")
+		return r.manageFailure(ctx, reqLogger, arg, err, "Failed to get WO Reconcilers Data")
 	}
+	// Append WO Reconcilers Data to GitOps Reconcilers Data
+	reconcilersData = append(reconcilersData, woReconcilersData...)
 
 	// Get list of all all reconcilers with the label set to the name of the AzureResourceGraph
 	reconcilerList := &hubv1alpha1.ReconcilerList{}
@@ -227,7 +233,7 @@ func (r *AzureResourceGraphReconciler) createOrUpdateReconciler(ctx context.Cont
 
 // get a list of ReconcilerSpec from the Azure Resource Graph
 // at this point only git/kustomize is supported. Helm is not supported.
-func (r *AzureResourceGraphReconciler) getReconcilersData(ctx context.Context, fluxConfigClient *armkubernetesconfiguration.FluxConfigurationsClient, fluxConfigs []interface{}, logger logr.Logger) ([]hubv1alpha1.ReconcilerSpec, error) {
+func (r *AzureResourceGraphReconciler) getFluxReconcilersData(ctx context.Context, fluxConfigClient *armkubernetesconfiguration.FluxConfigurationsClient, fluxConfigs []interface{}, logger logr.Logger) ([]hubv1alpha1.ReconcilerSpec, error) {
 	// Iterate over the results and create a slice of ReconcilerSpec
 	var reconcilerData []hubv1alpha1.ReconcilerSpec
 
@@ -395,6 +401,8 @@ func (r *AzureResourceGraphReconciler) translateComplianceState(complianceState 
 	switch complianceState {
 	case "Compliant":
 		return hubv1alpha1.DeploymentStatusSuccess
+	case "Succeeded":
+		return hubv1alpha1.DeploymentStatusSuccess
 	case "Non-Compliant":
 		return hubv1alpha1.DeploymentStatusFailed
 	case "Noncompliant":
@@ -460,6 +468,15 @@ func (r *AzureResourceGraphReconciler) getARGClient(cred *azidentity.DefaultAzur
 	return clientFactory.NewClient(), nil
 }
 
+// Get ARM client
+func (r *AzureResourceGraphReconciler) getARMClient(cred *azidentity.DefaultAzureCredential, subscriptionId string) (*armresources.Client, error) {
+	clientFactory, err := armresources.NewClientFactory(subscriptionId, cred, nil)
+	if err != nil {
+		return nil, err
+	}
+	return clientFactory.NewClient(), nil
+}
+
 // Get Flux Config Client
 func (r *AzureResourceGraphReconciler) getFluxConfigClient(cred *azidentity.DefaultAzureCredential, subscriptionId string) (*armkubernetesconfiguration.FluxConfigurationsClient, error) {
 	clientFactory, err := armkubernetesconfiguration.NewClientFactory(subscriptionId, cred, nil)
@@ -468,6 +485,16 @@ func (r *AzureResourceGraphReconciler) getFluxConfigClient(cred *azidentity.Defa
 	}
 	return clientFactory.NewFluxConfigurationsClient(), nil
 
+}
+
+func (r *AzureResourceGraphReconciler) getWoTargets(ctx context.Context, argClient *armresourcegraph.Client, subscription string) (armresourcegraph.ClientResourcesResponse, error) {
+	query := "where type == 'microsoft.edge/targets'"
+	resultFormatObjectArray := armresourcegraph.ResultFormatObjectArray
+	return argClient.Resources(ctx, armresourcegraph.QueryRequest{
+		Subscriptions: []*string{&subscription},
+		Query:         &query,
+		Options:       &armresourcegraph.QueryRequestOptions{ResultFormat: &resultFormatObjectArray},
+	}, nil)
 }
 
 // Get Flux Configurations
@@ -488,6 +515,105 @@ func (r *AzureResourceGraphReconciler) getFluxConfigurations(ctx context.Context
 	}
 
 	return argClient.Resources(ctx, Request, nil)
+}
+
+// Get Reconcilers Data from Workload Orchetration service
+func (r *AzureResourceGraphReconciler) getWoReconcilersData(ctx context.Context, argClient *armresourcegraph.Client, armClient *armresources.Client, subscription string, logger logr.Logger) ([]hubv1alpha1.ReconcilerSpec, error) {
+	reconcilerData := []hubv1alpha1.ReconcilerSpec{}
+	// get a list of deployment descriptors
+	deploymentDescriptors := &hubv1alpha1.DeploymentDescriptorList{}
+	err := r.List(ctx, deploymentDescriptors)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list deployment descriptors: %w", err)
+	}
+
+	// Iterate over a list of deployment descriptors (hubv1alpha1.DeploymentDescriptor)
+	for _, deploymentDescriptor := range deploymentDescriptors.Items {
+		deploymentTargetName := deploymentDescriptor.Spec.DeploymentTarget.Name
+
+		//TODO:
+		// add gitopscommitid ro deployment descriptor status
+		// CHeck solution version
+
+		gitOpsCommitId := deploymentDescriptor.Status.GitOpsCommitId
+		descriptorDeploymentTarget := deploymentDescriptor.Spec.DeploymentTarget
+		endpoint := fmt.Sprintf("%s/%s/%s", descriptorDeploymentTarget.Manifests.Repo, descriptorDeploymentTarget.Manifests.Branch, descriptorDeploymentTarget.Manifests.Path)
+
+		//iterate over a list of WO targets
+		woTargets, err := r.getWoTargets(ctx, argClient, subscription)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get WO targets: %w", err)
+		}
+		for _, woTarget := range woTargets.Data.([]interface{}) {
+			woTargetMap := woTarget.(map[string]interface{})
+			//get targetName
+			targetName := woTargetMap["name"].(string)
+			// Get custom location as extendedLocation.name
+			// extendedLocation is a map with a key "name"
+			extendedLocation := woTargetMap["extendedLocation"].(map[string]interface{})
+			extendedLocationName := extendedLocation["name"].(string)
+			// extract the last section starting with "/" as a locationName
+			extendedLocationNameSections := strings.Split(extendedLocationName, "/")
+			locationName := ""
+			if len(extendedLocationNameSections) > 0 {
+				locationName = extendedLocationNameSections[len(extendedLocationNameSections)-1]
+			}
+
+			instanceId := fmt.Sprintf("%v/solutions/%v/instances/%v", woTargetMap["id"], deploymentTargetName, deploymentTargetName)
+			//get the instance with getAzureResourceById
+			instance, err := r.getAzureResourceById(ctx, armClient, instanceId)
+			if err != nil {
+				logger.Info("Could not get instance for deployment target", "deploymentTargetName", deploymentTargetName, "instanceId", instanceId, "error", err)
+				continue
+			}
+			//Check the status as properties.status.status
+			properties := instance.Properties.(map[string]interface{})
+			statusProperties := properties["status"].(map[string]interface{})
+			status := statusProperties["status"].(string)
+			statusMessage := statusProperties["targetStatuses"].(string)
+			resourceGroup := woTargetMap["resourceGroup"].(string)
+
+			// create or update reconciler
+			reconciler := r.createReconciler(status, statusMessage, gitOpsCommitId,
+				resourceGroup, locationName, targetName, endpoint, hubv1alpha1.ReconcilerTypeWo)
+
+			reconcilerData = append(reconcilerData, reconciler)
+		}
+	}
+	return reconcilerData, nil
+}
+
+// get azure resource by id using armresources.Client
+// This function is not used in the current implementation, but it can be used to get Azure
+// resources by their ID if needed in the future.
+func (r *AzureResourceGraphReconciler) getAzureResourceById(ctx context.Context, armClient *armresources.Client, resourceId string) (*armresources.GenericResource, error) {
+	resource, err := armClient.GetByID(ctx, resourceId, "2021-04-01", nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get Azure resource by ID: %w", err)
+	}
+	return &resource.GenericResource, nil
+}
+
+func (r *AzureResourceGraphReconciler) getGitOpsReconcilersData(ctx context.Context, cred *azidentity.DefaultAzureCredential, argClient *armresourcegraph.Client, subscription string, logger logr.Logger) ([]hubv1alpha1.ReconcilerSpec, error) {
+	// Get Flux Configurations
+	fluxConfigs, err := r.getFluxConfigurations(ctx, argClient, subscription)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get Flux Config Client
+	fluxConfigClient, err := r.getFluxConfigClient(cred, subscription)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get Reconcilers Data
+	reconcilersData, err := r.getFluxReconcilersData(ctx, fluxConfigClient, fluxConfigs.Data.([]interface{}), logger)
+	if err != nil {
+		return nil, err
+	}
+
+	return reconcilersData, nil
 }
 
 // Gracefully handle errors

@@ -41,6 +41,7 @@ type ReconcilerType string
 const (
 	ReconcilerTypeFlux ReconcilerType = "flux"
 	ReconcilerTypeArc  ReconcilerType = "arc"
+	ReconcilerTypeWo   ReconcilerType = "wo"
 )
 
 type Deployment struct {
