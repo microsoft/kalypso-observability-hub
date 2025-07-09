@@ -527,6 +527,12 @@ func (r *AzureResourceGraphReconciler) getWoReconcilersData(ctx context.Context,
 		return nil, fmt.Errorf("failed to list deployment descriptors: %w", err)
 	}
 
+	//iterate over a list of WO targets
+	woTargets, err := r.getWoTargets(ctx, argClient, subscription)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get WO targets: %w", err)
+	}
+
 	// Iterate over a list of deployment descriptors (hubv1alpha1.DeploymentDescriptor)
 	for _, deploymentDescriptor := range deploymentDescriptors.Items {
 		deploymentTargetName := deploymentDescriptor.Spec.DeploymentTarget.Name
@@ -536,11 +542,6 @@ func (r *AzureResourceGraphReconciler) getWoReconcilersData(ctx context.Context,
 		endpoint := fmt.Sprintf("%s/%s/%s", descriptorDeploymentTarget.Manifests.Repo, descriptorDeploymentTarget.Manifests.Branch, descriptorDeploymentTarget.Manifests.Path)
 		workloadVsersion := deploymentDescriptor.Spec.WorkloadVersion.Version
 
-		//iterate over a list of WO targets
-		woTargets, err := r.getWoTargets(ctx, argClient, subscription)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get WO targets: %w", err)
-		}
 		for _, woTarget := range woTargets.Data.([]interface{}) {
 			woTargetMap := woTarget.(map[string]interface{})
 			//get targetName
