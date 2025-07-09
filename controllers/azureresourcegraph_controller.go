@@ -531,13 +531,10 @@ func (r *AzureResourceGraphReconciler) getWoReconcilersData(ctx context.Context,
 	for _, deploymentDescriptor := range deploymentDescriptors.Items {
 		deploymentTargetName := deploymentDescriptor.Spec.DeploymentTarget.Name
 
-		//TODO:
-		// add gitopscommitid ro deployment descriptor status
-		// CHeck solution version
-
 		gitOpsCommitId := deploymentDescriptor.Status.GitOpsCommitId
 		descriptorDeploymentTarget := deploymentDescriptor.Spec.DeploymentTarget
 		endpoint := fmt.Sprintf("%s/%s/%s", descriptorDeploymentTarget.Manifests.Repo, descriptorDeploymentTarget.Manifests.Branch, descriptorDeploymentTarget.Manifests.Path)
+		workloadVsersion := deploymentDescriptor.Spec.WorkloadVersion.Version
 
 		//iterate over a list of WO targets
 		woTargets, err := r.getWoTargets(ctx, argClient, subscription)
@@ -563,14 +560,47 @@ func (r *AzureResourceGraphReconciler) getWoReconcilersData(ctx context.Context,
 			//get the instance with getAzureResourceById
 			instance, err := r.getAzureResourceById(ctx, armClient, instanceId)
 			if err != nil {
-				logger.Info("Could not get instance for deployment target", "deploymentTargetName", deploymentTargetName, "instanceId", instanceId, "error", err)
+				// check if the error is not found
+				if !strings.Contains(err.Error(), "404") {
+					logger.Info("Instance not found for deployment target", "deploymentTargetName", deploymentTargetName, "instanceId", instanceId)
+				}
 				continue
 			}
+
+			logger.Info("Found an instance for deployment target", "deploymentTargetName", deploymentTargetName, "instanceId", instanceId)
 			//Check the status as properties.status.status
 			properties := instance.Properties.(map[string]interface{})
+			solutionVersionId := properties["solutionVersionId"].(string)
+			//extract vsersion from solutionVersionId string like "something-0.0.126.2 -> 0.0.126.2
+			solutionVersionParts := strings.Split(solutionVersionId, "-")
+			solutionVersion := ""
+			if len(solutionVersionParts) > 1 {
+				solutionVersion = solutionVersionParts[len(solutionVersionParts)-1]
+			}
+			// remove last section of solutionVersion if it contains a dot 0.0.126.2 -> 0.0.126
+			if strings.Contains(solutionVersion, ".") {
+				solutionVersionParts = strings.Split(solutionVersion, ".")
+				if len(solutionVersionParts) > 1 {
+					solutionVersion = strings.Join(solutionVersionParts[:len(solutionVersionParts)-1], ".")
+				}
+			}
+
+			if workloadVsersion != solutionVersion {
+				logger.Info("Skipping reconciler creation for deployment descriptor", "deploymentDescriptorName", deploymentDescriptor.Name,
+					"deploymentTargetName", deploymentTargetName, "solutionVersion", solutionVersion,
+					"workloadVsersion", workloadVsersion, "targetName", targetName)
+				continue
+			}
+
 			statusProperties := properties["status"].(map[string]interface{})
 			status := statusProperties["status"].(string)
-			statusMessage := statusProperties["targetStatuses"].(string)
+
+			// Handle targetStatuses which might be a slice or string
+			var statusMessage string
+			if targetStatuses, exists := statusProperties["targetStatuses"]; exists {
+				statusMessage = fmt.Sprintf("%v", targetStatuses)
+			}
+
 			resourceGroup := woTargetMap["resourceGroup"].(string)
 
 			// create or update reconciler
@@ -587,7 +617,7 @@ func (r *AzureResourceGraphReconciler) getWoReconcilersData(ctx context.Context,
 // This function is not used in the current implementation, but it can be used to get Azure
 // resources by their ID if needed in the future.
 func (r *AzureResourceGraphReconciler) getAzureResourceById(ctx context.Context, armClient *armresources.Client, resourceId string) (*armresources.GenericResource, error) {
-	resource, err := armClient.GetByID(ctx, resourceId, "2021-04-01", nil)
+	resource, err := armClient.GetByID(ctx, resourceId, "2025-01-01-preview", nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get Azure resource by ID: %w", err)
 	}

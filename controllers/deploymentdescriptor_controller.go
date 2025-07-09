@@ -181,6 +181,8 @@ func (r *DeploymentDescriptorReconciler) Reconcile(ctx context.Context, req ctrl
 	}
 	meta.SetStatusCondition(&deploymentDescriptor.Status.Conditions, condition)
 
+	deploymentDescriptor.Status.GitOpsCommitId = *commit_id
+
 	updateErr := r.Status().Update(ctx, deploymentDescriptor)
 	if updateErr != nil {
 		reqLogger.Info("Error when updating status.")
