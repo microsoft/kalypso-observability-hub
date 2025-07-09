@@ -518,6 +518,8 @@ func (r *AzureResourceGraphReconciler) getFluxConfigurations(ctx context.Context
 }
 
 // Get Reconcilers Data from Workload Orchetration service
+// Since there is not API to get all deployed instances we have to iterate over all deployment descriptors and targets and check if the instance exist one-by-one.
+// This is not the most efficient way, but it is the only way until the Workload Orchestration service provides an API to get all instances.
 func (r *AzureResourceGraphReconciler) getWoReconcilersData(ctx context.Context, argClient *armresourcegraph.Client, armClient *armresources.Client, subscription string, logger logr.Logger) ([]hubv1alpha1.ReconcilerSpec, error) {
 	reconcilerData := []hubv1alpha1.ReconcilerSpec{}
 	// get a list of deployment descriptors
@@ -558,20 +560,21 @@ func (r *AzureResourceGraphReconciler) getWoReconcilersData(ctx context.Context,
 			}
 
 			instanceId := fmt.Sprintf("%v/solutions/%v/instances/%v", woTargetMap["id"], deploymentTargetName, deploymentTargetName)
-			instanceIds = append(instanceIds, instanceId)
-		}
+			//get the instance with getAzureResourceById
+			instance, err := r.getAzureResourceById(ctx, armClient, instanceId)
+			if err != nil {
+				// check if the error is not found
+				if !strings.Contains(err.Error(), "404") {
+					logger.Info("Instance not found for deployment target", "deploymentTargetName", deploymentTargetName, "instanceId", instanceId)
+				}
+				continue
+			}
 
-		instances, err := r.getAzureResourcesByIds(ctx, armClient, instanceIds)
-		if err != nil {
-			logger.Error(err, "Failed to fetch instances in batch")
-			return nil, err
-		}
-
-		for _, instance := range instances {
-			// Existing logic for processing each instance
+			logger.Info("Found an instance for deployment target", "deploymentTargetName", deploymentTargetName, "instanceId", instanceId)
+			//Check the status as properties.status.status
 			properties := instance.Properties.(map[string]interface{})
 			solutionVersionId := properties["solutionVersionId"].(string)
-			//extract version from solutionVersionId string like "something-0.0.126.2 -> 0.0.126.2
+			//extract vsersion from solutionVersionId string like "something-0.0.126.2 -> 0.0.126.2
 			solutionVersionParts := strings.Split(solutionVersionId, "-")
 			solutionVersion := ""
 			if len(solutionVersionParts) > 1 {
