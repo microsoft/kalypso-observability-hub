@@ -96,7 +96,8 @@ type DeploymentDescriptorSpec struct {
 
 // DeploymentDescriptorStatus defines the observed state of DeploymentDescriptor
 type DeploymentDescriptorStatus struct {
-	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+	Conditions     []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+	GitOpsCommitId string             `json:"gitOpsCommitId,omitempty"`
 }
 
 //+kubebuilder:object:root=true
