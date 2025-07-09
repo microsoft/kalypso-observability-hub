@@ -558,21 +558,20 @@ func (r *AzureResourceGraphReconciler) getWoReconcilersData(ctx context.Context,
 			}
 
 			instanceId := fmt.Sprintf("%v/solutions/%v/instances/%v", woTargetMap["id"], deploymentTargetName, deploymentTargetName)
-			//get the instance with getAzureResourceById
-			instance, err := r.getAzureResourceById(ctx, armClient, instanceId)
-			if err != nil {
-				// check if the error is not found
-				if !strings.Contains(err.Error(), "404") {
-					logger.Info("Instance not found for deployment target", "deploymentTargetName", deploymentTargetName, "instanceId", instanceId)
-				}
-				continue
-			}
+			instanceIds = append(instanceIds, instanceId)
+		}
 
-			logger.Info("Found an instance for deployment target", "deploymentTargetName", deploymentTargetName, "instanceId", instanceId)
-			//Check the status as properties.status.status
+		instances, err := r.getAzureResourcesByIds(ctx, armClient, instanceIds)
+		if err != nil {
+			logger.Error(err, "Failed to fetch instances in batch")
+			return nil, err
+		}
+
+		for _, instance := range instances {
+			// Existing logic for processing each instance
 			properties := instance.Properties.(map[string]interface{})
 			solutionVersionId := properties["solutionVersionId"].(string)
-			//extract vsersion from solutionVersionId string like "something-0.0.126.2 -> 0.0.126.2
+			//extract version from solutionVersionId string like "something-0.0.126.2 -> 0.0.126.2
 			solutionVersionParts := strings.Split(solutionVersionId, "-")
 			solutionVersion := ""
 			if len(solutionVersionParts) > 1 {
