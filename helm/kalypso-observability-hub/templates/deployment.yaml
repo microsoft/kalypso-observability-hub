@@ -78,6 +78,7 @@ spec:
         command:
         - /manager
         env:
+        
         - name: STORAGE_SERVICE_ADDRESS
           valueFrom:
             configMapKeyRef:
@@ -89,6 +90,7 @@ spec:
               key: WORKSPACE
               name: {{ include "tmp.fullname" . }}-controller-manager-config
               optional: true
+              
         - name: APPLICATION
           valueFrom:
             configMapKeyRef:
