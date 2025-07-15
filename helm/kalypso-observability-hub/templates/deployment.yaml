@@ -78,7 +78,6 @@ spec:
         command:
         - /manager
         env:
-        
         - name: STORAGE_SERVICE_ADDRESS
           valueFrom:
             configMapKeyRef:
@@ -90,13 +89,12 @@ spec:
               key: WORKSPACE
               name: {{ include "tmp.fullname" . }}-controller-manager-config
               optional: true
-              
         - name: APPLICATION
           valueFrom:
             configMapKeyRef:
               key: APPLICATION
               name: {{ include "tmp.fullname" . }}-controller-manager-config
-              optional: true              
+              optional: true
         - name: KUBERNETES_CLUSTER_DOMAIN
           value: {{ .Values.kubernetesClusterDomain }}
         image: {{ .Values.controllerManager.manager.image.repository }}:{{ .Values.controllerManager.manager.image.tag

@@ -71,7 +71,7 @@ jobs:
 
       - name: Build Helm Chart
         run: |
-          #  make helm-build
+           make helm-build
            sed -i "s|tag: latest|tag: $VERSION|g" ./helm/kalypso-observability-hub/values.yaml
            sed -i "s|tag: latest|tag: $VERSION|g" ./helm/kalypso-observability-hub/charts/api-server/values.yaml
 
