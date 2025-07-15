@@ -345,8 +345,8 @@ func (r *AzureResourceGraphReconciler) getReconcilersDataFromChildKalypsoObjects
 	var workloadName string
 	var deploymentTargetName string
 
-	workspace = os.Getenv("WORKSPACE")
-	application = os.Getenv("APPLICATION")
+	workspace = r.Workspace
+	application = r.Application
 
 	fluxConfigurationDetal := res.FluxConfiguration
 	// iteretae over the statuses and log them
