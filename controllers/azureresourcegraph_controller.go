@@ -339,6 +339,14 @@ func (r *AzureResourceGraphReconciler) getReconcilersDataFromChildKalypsoObjects
 			return nil, err
 		}
 	}
+	var environmentName string
+	var workspace string
+	var application string
+	var workloadName string
+	var deploymentTargetName string
+
+	workspace = os.Getenv("WORKSPACE")
+	application = os.Getenv("APPLICATION")
 
 	fluxConfigurationDetal := res.FluxConfiguration
 	// iteretae over the statuses and log them
@@ -347,17 +355,20 @@ func (r *AzureResourceGraphReconciler) getReconcilersDataFromChildKalypsoObjects
 			continue
 		}
 
-		//TODO Update Kalypso: name deployment target as workload.deploymentTarget or without workload at all
 		// expected flux resource name format: env.workspace.application.workload.deploymentTarget[.clusterType]
 		nameParts := strings.Split(*status.Name, ".")
-		if len(nameParts) < 5 {
-			continue
+
+		if len(nameParts) >= 5 {
+			environmentName = nameParts[0]
+			workspace = nameParts[1]
+			application = nameParts[2]
+			workloadName = nameParts[3]
+			deploymentTargetName = nameParts[4]
+		} else if len(nameParts) >= 3 {
+			environmentName = nameParts[0]
+			workloadName = nameParts[1]
+			deploymentTargetName = nameParts[2]
 		}
-		environmentName := nameParts[0]
-		workspace := nameParts[1]
-		application := nameParts[2]
-		workloadName := nameParts[3]
-		deploymentTargetName := nameParts[4]
 
 		dt, err := storageClient.GetDeploymentTarget(ctx, &pb.DeploymentTargetSearch{
 			WorkloadName:         workloadName,

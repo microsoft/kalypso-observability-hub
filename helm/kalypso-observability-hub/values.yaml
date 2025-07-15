@@ -24,6 +24,8 @@ controllerManager:
   replicas: 1
 controllerManagerConfig:
   storageServiceAddress: kalypso-observability-hub-api-server:50051
+  workspace: ""
+  application: ""
 kubernetesClusterDomain: cluster.local
 metricsService:
   ports:

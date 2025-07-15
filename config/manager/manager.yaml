@@ -78,6 +78,18 @@ spec:
             configMapKeyRef:
               key: STORAGE_SERVICE_ADDRESS
               name: controller-manager-config
+        - name: WORKSPACE
+          valueFrom:
+            configMapKeyRef:
+              key: WORKSPACE
+              name: controller-manager-config
+              optional: true              
+        - name: APPLICATION
+          valueFrom:
+            configMapKeyRef:
+              key: APPLICATION
+              name: controller-manager-config
+              optional: true                   
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
@@ -123,3 +135,6 @@ metadata:
     app.kubernetes.io/managed-by: kustomize
 data:
   STORAGE_SERVICE_ADDRESS: "kalypso-observability-hub-api-server:50051"
+  WORKSPACE: "workspace"
+  APPLICATION: "application"
+  

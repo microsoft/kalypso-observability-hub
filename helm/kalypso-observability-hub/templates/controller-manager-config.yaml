@@ -9,5 +9,7 @@ metadata:
     control-plane: controller-manager
   {{- include "tmp.labels" . | nindent 4 }}
 data:
+  APPLICATION: {{ .Values.controllerManagerConfig.application | quote }}
   STORAGE_SERVICE_ADDRESS: {{ .Values.controllerManagerConfig.storageServiceAddress
     | quote }}
+  WORKSPACE: {{ .Values.controllerManagerConfig.workspace | quote }}
