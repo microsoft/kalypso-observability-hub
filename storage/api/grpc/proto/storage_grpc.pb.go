@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v3.21.9
-// source: proto/storage.proto
+// source: api/grpc/proto/storage.proto
 
 package proto
 
@@ -33,6 +33,7 @@ type StorageApiClient interface {
 	UpdateReconciler(ctx context.Context, in *Reconciler, opts ...grpc.CallOption) (*Reconciler, error)
 	UpdateDeployment(ctx context.Context, in *Deployment, opts ...grpc.CallOption) (*Deployment, error)
 	GetDeploymentTarget(ctx context.Context, in *DeploymentTargetSearch, opts ...grpc.CallOption) (*DeploymentTarget, error)
+	GetDeploymentAssignment(ctx context.Context, in *DeploymentAssignmentSearch, opts ...grpc.CallOption) (*DeploymentAssignment, error)
 	GetDeploymentState(ctx context.Context, in *DeploymentStateRequest, opts ...grpc.CallOption) (*DeploymentState, error)
 }
 
@@ -143,6 +144,15 @@ func (c *storageApiClient) GetDeploymentTarget(ctx context.Context, in *Deployme
 	return out, nil
 }
 
+func (c *storageApiClient) GetDeploymentAssignment(ctx context.Context, in *DeploymentAssignmentSearch, opts ...grpc.CallOption) (*DeploymentAssignment, error) {
+	out := new(DeploymentAssignment)
+	err := c.cc.Invoke(ctx, "/proto.StorageApi/GetDeploymentAssignment", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *storageApiClient) GetDeploymentState(ctx context.Context, in *DeploymentStateRequest, opts ...grpc.CallOption) (*DeploymentState, error) {
 	out := new(DeploymentState)
 	err := c.cc.Invoke(ctx, "/proto.StorageApi/GetDeploymentState", in, out, opts...)
@@ -167,6 +177,7 @@ type StorageApiServer interface {
 	UpdateReconciler(context.Context, *Reconciler) (*Reconciler, error)
 	UpdateDeployment(context.Context, *Deployment) (*Deployment, error)
 	GetDeploymentTarget(context.Context, *DeploymentTargetSearch) (*DeploymentTarget, error)
+	GetDeploymentAssignment(context.Context, *DeploymentAssignmentSearch) (*DeploymentAssignment, error)
 	GetDeploymentState(context.Context, *DeploymentStateRequest) (*DeploymentState, error)
 	mustEmbedUnimplementedStorageApiServer()
 }
@@ -207,6 +218,9 @@ func (UnimplementedStorageApiServer) UpdateDeployment(context.Context, *Deployme
 }
 func (UnimplementedStorageApiServer) GetDeploymentTarget(context.Context, *DeploymentTargetSearch) (*DeploymentTarget, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDeploymentTarget not implemented")
+}
+func (UnimplementedStorageApiServer) GetDeploymentAssignment(context.Context, *DeploymentAssignmentSearch) (*DeploymentAssignment, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDeploymentAssignment not implemented")
 }
 func (UnimplementedStorageApiServer) GetDeploymentState(context.Context, *DeploymentStateRequest) (*DeploymentState, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDeploymentState not implemented")
@@ -422,6 +436,24 @@ func _StorageApi_GetDeploymentTarget_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _StorageApi_GetDeploymentAssignment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeploymentAssignmentSearch)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StorageApiServer).GetDeploymentAssignment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.StorageApi/GetDeploymentAssignment",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StorageApiServer).GetDeploymentAssignment(ctx, req.(*DeploymentAssignmentSearch))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _StorageApi_GetDeploymentState_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeploymentStateRequest)
 	if err := dec(in); err != nil {
@@ -492,10 +524,14 @@ var StorageApi_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _StorageApi_GetDeploymentTarget_Handler,
 		},
 		{
+			MethodName: "GetDeploymentAssignment",
+			Handler:    _StorageApi_GetDeploymentAssignment_Handler,
+		},
+		{
 			MethodName: "GetDeploymentState",
 			Handler:    _StorageApi_GetDeploymentState_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "proto/storage.proto",
+	Metadata: "api/grpc/proto/storage.proto",
 }

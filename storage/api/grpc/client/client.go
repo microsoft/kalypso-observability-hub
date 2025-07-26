@@ -3,6 +3,7 @@ package client
 import (
 	context "context"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 
@@ -23,6 +24,7 @@ type ObservabilityStorageGrpcClient interface {
 	UpdateReconciler(ctx context.Context, in *pb.Reconciler) (*pb.Reconciler, error)
 	UpdateDeployment(ctx context.Context, in *pb.Deployment) (*pb.Deployment, error)
 	GetDeploymentTarget(ctx context.Context, in *pb.DeploymentTargetSearch) (*pb.DeploymentTarget, error)
+	GetDeploymentAssignment(ctx context.Context, in *pb.DeploymentAssignmentSearch) (*pb.DeploymentAssignment, error)
 	GetDeploymentState(ctx context.Context, in *pb.DeploymentStateRequest) (*pb.DeploymentState, error)
 }
 
@@ -57,12 +59,19 @@ func (c *observabilityStorageGrpcClient) getConnection() (*grpc.ClientConn, erro
 	return conn, nil
 }
 
+// closeConnection safely closes a gRPC connection and logs any errors
+func (c *observabilityStorageGrpcClient) closeConnection(conn *grpc.ClientConn) {
+	if err := conn.Close(); err != nil {
+		log.Printf("failed to close gRPC connection: %v", err)
+	}
+}
+
 func (c *observabilityStorageGrpcClient) UpdateWorkspace(ctx context.Context, in *pb.Workspace) (*pb.Workspace, error) {
 	conn, err := c.getConnection()
 	if err != nil {
 		return nil, err
 	}
-	defer conn.Close()
+	defer c.closeConnection(conn)
 	client := pb.NewStorageApiClient(conn)
 	ws, err := client.UpdateWorkspace(ctx, in)
 	if err != nil {
@@ -76,7 +85,7 @@ func (c *observabilityStorageGrpcClient) UpdateApplication(ctx context.Context, 
 	if err != nil {
 		return nil, err
 	}
-	defer conn.Close()
+	defer c.closeConnection(conn)
 	client := pb.NewStorageApiClient(conn)
 	app, err := client.UpdateApplication(ctx, in)
 	if err != nil {
@@ -90,7 +99,7 @@ func (c *observabilityStorageGrpcClient) UpdateWorkload(ctx context.Context, in 
 	if err != nil {
 		return nil, err
 	}
-	defer conn.Close()
+	defer c.closeConnection(conn)
 	client := pb.NewStorageApiClient(conn)
 	wl, err := client.UpdateWorkload(ctx, in)
 	if err != nil {
@@ -104,7 +113,7 @@ func (c *observabilityStorageGrpcClient) UpdateEnvironment(ctx context.Context, 
 	if err != nil {
 		return nil, err
 	}
-	defer conn.Close()
+	defer c.closeConnection(conn)
 	client := pb.NewStorageApiClient(conn)
 	env, err := client.UpdateEnvironment(ctx, in)
 	if err != nil {
@@ -118,7 +127,7 @@ func (c *observabilityStorageGrpcClient) UpdateDeploymentTarget(ctx context.Cont
 	if err != nil {
 		return nil, err
 	}
-	defer conn.Close()
+	defer c.closeConnection(conn)
 	client := pb.NewStorageApiClient(conn)
 	dt, err := client.UpdateDeploymentTarget(ctx, in)
 	if err != nil {
@@ -132,7 +141,7 @@ func (c *observabilityStorageGrpcClient) UpdateWorkloadVersion(ctx context.Conte
 	if err != nil {
 		return nil, err
 	}
-	defer conn.Close()
+	defer c.closeConnection(conn)
 	client := pb.NewStorageApiClient(conn)
 	wlv, err := client.UpdateWorkloadVersion(ctx, in)
 	if err != nil {
@@ -146,7 +155,7 @@ func (c *observabilityStorageGrpcClient) UpdateDeploymentAssignment(ctx context.
 	if err != nil {
 		return nil, err
 	}
-	defer conn.Close()
+	defer c.closeConnection(conn)
 	client := pb.NewStorageApiClient(conn)
 	da, err := client.UpdateDeploymentAssignment(ctx, in)
 	if err != nil {
@@ -160,7 +169,7 @@ func (c *observabilityStorageGrpcClient) UpdateHost(ctx context.Context, in *pb.
 	if err != nil {
 		return nil, err
 	}
-	defer conn.Close()
+	defer c.closeConnection(conn)
 	client := pb.NewStorageApiClient(conn)
 	host, err := client.UpdateHost(ctx, in)
 	if err != nil {
@@ -174,7 +183,7 @@ func (c *observabilityStorageGrpcClient) UpdateReconciler(ctx context.Context, i
 	if err != nil {
 		return nil, err
 	}
-	defer conn.Close()
+	defer c.closeConnection(conn)
 	client := pb.NewStorageApiClient(conn)
 	rec, err := client.UpdateReconciler(ctx, in)
 	if err != nil {
@@ -188,7 +197,7 @@ func (c *observabilityStorageGrpcClient) UpdateDeployment(ctx context.Context, i
 	if err != nil {
 		return nil, err
 	}
-	defer conn.Close()
+	defer c.closeConnection(conn)
 	client := pb.NewStorageApiClient(conn)
 	dep, err := client.UpdateDeployment(ctx, in)
 	if err != nil {
@@ -202,7 +211,7 @@ func (c *observabilityStorageGrpcClient) GetDeploymentTarget(ctx context.Context
 	if err != nil {
 		return nil, err
 	}
-	defer conn.Close()
+	defer c.closeConnection(conn)
 	client := pb.NewStorageApiClient(conn)
 
 	dt, err := client.GetDeploymentTarget(ctx, in)
@@ -212,13 +221,31 @@ func (c *observabilityStorageGrpcClient) GetDeploymentTarget(ctx context.Context
 	return dt, nil
 }
 
+// GetDeploymentAssignment retrieves a deployment assignment using the proper protobuf structure
+func (c *observabilityStorageGrpcClient) GetDeploymentAssignment(ctx context.Context, in *pb.DeploymentAssignmentSearch) (*pb.DeploymentAssignment, error) {
+	conn, err := c.getConnection()
+	if err != nil {
+		return nil, err
+	}
+	defer c.closeConnection(conn)
+	client := pb.NewStorageApiClient(conn)
+
+	// Use the proper gRPC call with the DeploymentAssignmentSearch struct
+	assignment, err := client.GetDeploymentAssignment(ctx, in)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get deployment assignment: %w", err)
+	}
+
+	return assignment, nil
+}
+
 // GetDeploymentState
 func (c *observabilityStorageGrpcClient) GetDeploymentState(ctx context.Context, in *pb.DeploymentStateRequest) (*pb.DeploymentState, error) {
 	conn, err := c.getConnection()
 	if err != nil {
 		return nil, err
 	}
-	defer conn.Close()
+	defer c.closeConnection(conn)
 	client := pb.NewStorageApiClient(conn)
 
 	ds, err := client.GetDeploymentState(ctx, in)

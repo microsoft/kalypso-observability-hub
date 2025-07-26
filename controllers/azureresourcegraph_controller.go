@@ -136,7 +136,7 @@ func (r *AzureResourceGraphReconciler) Reconcile(ctx context.Context, req ctrl.R
 			return r.manageFailure(ctx, reqLogger, arg, err, "Failed to create or update Reconciler")
 		}
 		// log the created or updated reconciler
-		reqLogger.Info(fmt.Sprintf("Created or Updated Reconciler: " + fmt.Sprint(reconciler) + "\n"))
+		reqLogger.Info("Created or Updated Reconciler", "reconciler", reconciler)
 	}
 
 	condition := metav1.Condition{
@@ -173,7 +173,7 @@ func (r *AzureResourceGraphReconciler) garbageCollectReconcilers(ctx context.Con
 					return err
 				}
 				// log the deleted reconciler
-				logger.Info(fmt.Sprintf("Deleted Reconciler: " + fmt.Sprint(reconciler) + "\n"))
+				logger.Info("Deleted Reconciler", "reconciler", reconciler)
 			}
 
 		}
@@ -396,6 +396,16 @@ func (r *AzureResourceGraphReconciler) getReconcilersDataFromChildKalypsoObjects
 				statusMessage += statusConditionMessage
 			}
 
+		}
+
+		// Try to get deployment assignment with the deployment target ID and commit ID
+		_, err = storageClient.GetDeploymentAssignment(ctx, &pb.DeploymentAssignmentSearch{
+			DeploymentTargetId: dt.Id,
+			GitopsCommitId:     gitOpsCommitId,
+		})
+		if err != nil {
+			logger.Info("Could not find deployment assignment", "workspace", workspace, "application", application, "workloadName", workloadName, "deploymentTargetName", deploymentTargetName)
+			continue
 		}
 
 		reconciler := r.createReconciler(string(*status.ComplianceState), statusMessage, gitOpsCommitId,

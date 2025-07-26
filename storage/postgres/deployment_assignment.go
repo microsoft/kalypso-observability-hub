@@ -42,3 +42,23 @@ func (da *DeploymentAssignment) getByNaturalKey(conn *sql.DB) (Entity, error) {
 	}
 	return da, nil
 }
+
+// GetByDeploymentTargetAndCommit is a custom query function to find deployment assignment
+// by deployment target ID and git commit ID (without requiring workload version ID)
+var _ QueryFunc = GetByDeploymentTargetAndCommit
+
+func GetByDeploymentTargetAndCommit(conn *sql.DB, args ...interface{}) (interface{}, error) {
+	deploymentTargetId := args[0].(int)
+	gitopsCommitId := args[1].(string)
+
+	var da DeploymentAssignment
+	err := conn.QueryRow(
+		`SELECT id, deployment_target_id, workload_version_id, gitops_commit_id 
+		 FROM deployment_assignment 
+		 WHERE deployment_target_id=$1 AND gitops_commit_id=$2`,
+		deploymentTargetId, gitopsCommitId).Scan(&da.Id, &da.DeploymentTargetId, &da.WorkloadVersionId, &da.GitopsCommitId)
+	if err != nil {
+		return nil, err
+	}
+	return &da, nil
+}

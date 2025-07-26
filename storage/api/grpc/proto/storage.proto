@@ -93,6 +93,11 @@ message DeploymentTargetSearch {
 	string environment_name = 5;
 }
 
+message DeploymentAssignmentSearch {
+	int32 deployment_target_id = 1;
+	string gitops_commit_id = 2;
+}
+
 message DeploymentStateRequest {	
 	string manifests_endpoint = 1;
 	string commit_id = 2;
@@ -125,5 +130,6 @@ service StorageApi {
     rpc UpdateReconciler(Reconciler) returns (Reconciler) {}
     rpc UpdateDeployment(Deployment) returns (Deployment) {}
 	rpc GetDeploymentTarget(DeploymentTargetSearch) returns (DeploymentTarget) {}
+	rpc GetDeploymentAssignment(DeploymentAssignmentSearch) returns (DeploymentAssignment) {}
 	rpc GetDeploymentState(DeploymentStateRequest) returns (DeploymentState) {}
 }

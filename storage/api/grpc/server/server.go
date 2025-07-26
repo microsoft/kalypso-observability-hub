@@ -365,6 +365,28 @@ func (s *storageApiServer) GetDeploymentTarget(ctx context.Context, deploymentTa
 	}, nil
 }
 
+// Get DeploymentAssignment
+func (s *storageApiServer) GetDeploymentAssignment(ctx context.Context, deploymentAssignmentSearch *pb.DeploymentAssignmentSearch) (*pb.DeploymentAssignment, error) {
+	log.Printf("Received DeploymentAssignmentSearch: %v", deploymentAssignmentSearch)
+
+	//Get DeploymentAssignment by deployment target ID and gitops commit ID using custom query
+	da, err := s.dbClient.Query(ctx, db.GetByDeploymentTargetAndCommit, int(deploymentAssignmentSearch.DeploymentTargetId), deploymentAssignmentSearch.GitopsCommitId)
+	if err != nil {
+		return nil, err
+	}
+
+	deploymentAssignment := da.(*db.DeploymentAssignment)
+
+	log.Printf("Got DeploymentAssignment: %v", deploymentAssignment)
+	//return the deploymentAssignment
+	return &pb.DeploymentAssignment{
+		Id:                 int32(deploymentAssignment.Id),
+		DeploymentTargetId: int32(deploymentAssignment.DeploymentTargetId),
+		WorkloadVersionId:  int32(deploymentAssignment.WorkloadVersionId),
+		GitopsCommitId:     deploymentAssignment.GitopsCommitId,
+	}, nil
+}
+
 // Get DeploymentState
 func (s *storageApiServer) GetDeploymentState(ctx context.Context, deploymentStateRequest *pb.DeploymentStateRequest) (*pb.DeploymentState, error) {
 	log.Printf("Received DeploymentStateRequest: %v", deploymentStateRequest)
