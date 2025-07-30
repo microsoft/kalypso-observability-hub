@@ -1,0 +1,263 @@
+openapi: 3.0.3
+info:
+  title: Kalypso Observability Hub API
+  description: |
+    HTTP API for the Kalypso Observability Hub that provides deployment observability data.
+    External systems like GitHub CD workflows can query deployment states and related information.
+  version: 1.0.0
+  contact:
+    name: Kalypso Observability Hub
+    url: https://github.com/microsoft/kalypso-observability-hub
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+
+servers:
+  - url: http://localhost:8082
+    description: Development server
+  - url: https://api.observability-hub.example.com
+    description: Production server
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Returns the health status of the API server
+      operationId: getHealth
+      responses:
+        '200':
+          description: API server is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+
+  /api/v1/deployment-state:
+    get:
+      summary: Get deployment state
+      description: |
+        Retrieves the deployment state for a specific manifests endpoint and commit ID.
+        This endpoint provides information about total subscribers and their deployment status.
+      operationId: getDeploymentState
+      parameters:
+        - name: manifests_endpoint
+          in: query
+          required: true
+          description: The manifests endpoint URL
+          schema:
+            type: string
+            example: "https://github.com/example/gitops-repo"
+        - name: commit_id
+          in: query
+          required: true
+          description: The GitOps commit ID
+          schema:
+            type: string
+            example: "abc123def456"
+      responses:
+        '200':
+          description: Deployment state retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentState'
+        '400':
+          description: Bad request - missing required parameters
+        '500':
+          description: Internal server error
+
+  /api/v1/environments:
+    get:
+      summary: List environments
+      description: Retrieves a list of all environments
+      operationId: listEnvironments
+      responses:
+        '200':
+          description: List of environments (placeholder implementation)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "List environments endpoint - implementation needed"
+
+  /api/v1/environments/{name}:
+    get:
+      summary: Get environment by name
+      description: Retrieves a specific environment by its name
+      operationId: getEnvironment
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: The environment name
+          schema:
+            type: string
+            example: "production"
+      responses:
+        '200':
+          description: Environment retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Environment'
+        '400':
+          description: Bad request - invalid environment name
+        '404':
+          description: Environment not found
+        '500':
+          description: Internal server error
+
+  /api/v1/deployments:
+    get:
+      summary: List deployments
+      description: Retrieves a list of deployments
+      operationId: listDeployments
+      responses:
+        '200':
+          description: List of deployments (placeholder implementation)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "List deployments endpoint - implementation needed"
+
+  /api/v1/deployments/{id}:
+    get:
+      summary: Get deployment by ID
+      description: Retrieves a specific deployment by its ID
+      operationId: getDeployment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The deployment ID
+          schema:
+            type: integer
+            example: 123
+      responses:
+        '200':
+          description: Deployment retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deployment'
+        '400':
+          description: Bad request - invalid deployment ID
+        '404':
+          description: Deployment not found
+        '500':
+          description: Internal server error
+
+components:
+  schemas:
+    DeploymentState:
+      type: object
+      description: Represents the current state of deployments for a specific manifests endpoint and commit
+      properties:
+        total_subscribers:
+          type: integer
+          description: Total number of subscribers
+          example: 10
+        total_succeeded_subscribers:
+          type: integer
+          description: Number of subscribers with successful deployments
+          example: 8
+        total_failed_subscribers:
+          type: integer
+          description: Number of subscribers with failed deployments
+          example: 1
+        total_in_progress_subscribers:
+          type: integer
+          description: Number of subscribers with deployments in progress
+          example: 1
+        succeeded_subscribers:
+          type: array
+          description: List of subscribers with successful deployments
+          items:
+            $ref: '#/components/schemas/Subscriber'
+        failed_subscribers:
+          type: array
+          description: List of subscribers with failed deployments
+          items:
+            $ref: '#/components/schemas/Subscriber'
+        in_progress_subscribers:
+          type: array
+          description: List of subscribers with deployments in progress
+          items:
+            $ref: '#/components/schemas/Subscriber'
+
+    Subscriber:
+      type: object
+      description: Represents a deployment subscriber
+      properties:
+        name:
+          type: string
+          description: Name of the subscriber
+          example: "cluster-1"
+        status_message:
+          type: string
+          description: Status message from the subscriber
+          example: "Deployment completed successfully"
+
+    Environment:
+      type: object
+      description: Represents a deployment environment
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the environment
+          example: 1
+        name:
+          type: string
+          description: Name of the environment
+          example: "production"
+        description:
+          type: string
+          description: Description of the environment
+          example: "Production environment for live workloads"
+
+    Deployment:
+      type: object
+      description: Represents a deployment
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the deployment
+          example: 123
+        gitops_commit_id:
+          type: string
+          description: GitOps commit ID associated with this deployment
+          example: "abc123def456"
+        reconciler_id:
+          type: integer
+          description: ID of the reconciler that performed this deployment
+          example: 5
+        status:
+          type: string
+          description: Current status of the deployment
+          example: "success"
+          enum: [success, failure, in_progress]
+        status_message:
+          type: string
+          description: Detailed status message
+          example: "Deployment completed successfully"
+
+tags:
+  - name: Health
+    description: Health check operations
+  - name: Deployment State
+    description: Operations related to deployment state queries
+  - name: Environments
+    description: Operations related to environments
+  - name: Deployments
+    description: Operations related to deployments
