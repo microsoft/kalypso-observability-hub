@@ -76,7 +76,7 @@ jobs:
            sed -i "s|tag: latest|tag: $VERSION|g" ./helm/kalypso-observability-hub/charts/api-server/values.yaml
 
       - name: Publish Helm chart
-        uses: stefanprodan/helm-gh-pages@master
+        uses: stefanprodan/helm-gh-pages@0ad2bb377311d61ac04ad9eb6f252fb68e207260 # v1.7.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           charts_dir: ./helm
