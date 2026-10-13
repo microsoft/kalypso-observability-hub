@@ -19,6 +19,8 @@ package main
 import (
 	"flag"
 	"os"
+	"strconv"
+	"sync"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -32,8 +34,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
+	httpapi "github.com/microsoft/kalypso-observability-hub/api/http"
 	hubv1alpha1 "github.com/microsoft/kalypso-observability-hub/api/v1alpha1"
 	"github.com/microsoft/kalypso-observability-hub/controllers"
+	db "github.com/microsoft/kalypso-observability-hub/storage/postgres"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -54,11 +58,29 @@ func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
 	var probeAddr string
+	var httpAPIAddr string
+	var enableHTTPAPI bool
+	var postgresHost string
+	var postgresPort string
+	var postgresUser string
+	var postgresPassword string
+	var postgresDBName string
+	var postgresSSLMode string
+
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
+	flag.StringVar(&httpAPIAddr, "http-api-bind-address", ":8082", "The address the HTTP API endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
+	flag.BoolVar(&enableHTTPAPI, "enable-http-api", false, "Enable HTTP API server for external queries.")
+	flag.StringVar(&postgresHost, "postgres-host", "localhost", "PostgreSQL host for HTTP API.")
+	flag.StringVar(&postgresPort, "postgres-port", "5432", "PostgreSQL port for HTTP API.")
+	flag.StringVar(&postgresUser, "postgres-user", "postgres", "PostgreSQL user for HTTP API.")
+	flag.StringVar(&postgresPassword, "postgres-password", "", "PostgreSQL password for HTTP API.")
+	flag.StringVar(&postgresDBName, "postgres-dbname", "postgres", "PostgreSQL database name for HTTP API.")
+	flag.StringVar(&postgresSSLMode, "postgres-sslmode", "disable", "PostgreSQL SSL mode for HTTP API.")
+
 	opts := zap.Options{
 		Development: true,
 	}
@@ -121,6 +143,35 @@ func main() {
 	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
 		setupLog.Error(err, "unable to set up ready check")
 		os.Exit(1)
+	}
+
+	// Start HTTP API server if enabled
+	if enableHTTPAPI {
+		postgresPortInt, err := strconv.Atoi(postgresPort)
+		if err != nil {
+			setupLog.Error(err, "invalid postgres port")
+			os.Exit(1)
+		}
+
+		httpAPIPortStr := httpAPIAddr[1:] // Remove the : prefix
+		httpAPIPortInt, err := strconv.Atoi(httpAPIPortStr)
+		if err != nil {
+			setupLog.Error(err, "invalid HTTP API port")
+			os.Exit(1)
+		}
+
+		dbClient := db.NewPostgresClient(postgresHost, postgresPortInt, postgresUser, postgresPassword, postgresDBName, postgresSSLMode)
+		httpAPIServer := httpapi.NewHTTPAPIServer(dbClient, httpAPIPortInt)
+
+		var wg sync.WaitGroup
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			setupLog.Info("starting HTTP API server", "port", httpAPIPortInt)
+			if err := httpAPIServer.Start(); err != nil {
+				setupLog.Error(err, "problem running HTTP API server")
+			}
+		}()
 	}
 
 	setupLog.Info("starting manager")
